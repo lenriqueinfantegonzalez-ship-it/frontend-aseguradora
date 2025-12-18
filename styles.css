@@ -1,0 +1,88 @@
+/* Layout Global */
+body {
+    padding-top: 60px; /* Espacio para Header */
+    background-color: #f8f9fa;
+}
+
+/* Header Fijo */
+.navbar-top {
+    height: 60px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1030;
+    background-color: #0d6efd; /* Azul Bootstrap */
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.logo-circle {
+    width: 40px; height: 40px;
+    background: white;
+    color: #0d6efd;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Sidebar Fijo */
+.sidebar {
+    position: fixed;
+    top: 60px; bottom: 0; left: 0;
+    width: 260px;
+    background-color: white;
+    border-right: 1px solid #dee2e6;
+    padding: 20px 10px;
+    overflow-y: auto;
+}
+
+/* Contenido Principal */
+.main-content {
+    margin-left: 260px; /* Deja sitio al sidebar */
+    padding: 30px;
+}
+
+/* Enlaces */
+.nav-link {
+    color: #495057;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    padding: 10px 15px;
+}
+.nav-link:hover {
+    background-color: #e9ecef;
+}
+.nav-link.active {
+    background-color: #e7f1ff;
+    color: #0d6efd;
+    font-weight: bold;
+}
+
+.user-badge {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: bold;
+}
+/* Ajustes para textos legales */
+.text-justify {
+    text-align: justify;
+}
+
+/* Ajustes tarjetas configuración */
+.card-header {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* Iconos en formularios */
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}

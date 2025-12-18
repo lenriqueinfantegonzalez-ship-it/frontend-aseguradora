@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Aseguradora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .login-card { width: 100%; max-width: 400px; padding: 2rem; border-radius: 10px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <h2 class="text-primary fw-bold">ASEGURADORA</h2>
+            <p class="text-muted">Gestión integral de seguros</p>
+        </div>
+        <form id="loginForm">
+            <div class="mb-3">
+                <label class="form-label">Correo Electrónico</label>
+                <input type="email" class="form-control" id="correo" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="password" required>
+            </div>
+            <div class="text-center mt-3">
+                <a href="recuperar.html" class="small text-decoration-none">¿Olvidaste tu contraseña?</a>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Entrar</button>
+            <div id="error-message" class="text-danger mt-3 text-center" style="display: none;"></div>
+
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const correo = document.getElementById('correo').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-message');
+
+            try {
+                // Conexión con tu Backend Java
+                const response = await fetch('http://localhost:8081/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo, password })
+                });
+
+                if (response.ok) {
+                    const usuario = await response.json();
+                    sessionStorage.setItem('usuario', JSON.stringify(usuario)); // Guardamos sesión [cite: 56]
+                    window.location.href = 'dashboard.html'; // Redirigimos
+                } else {
+                    errorDiv.textContent = 'Usuario o contraseña incorrectos';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error: El servidor Backend no responde';
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

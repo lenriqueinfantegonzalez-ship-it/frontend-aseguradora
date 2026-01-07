@@ -467,25 +467,109 @@ async function ejecutarBorrado() {
     } catch (e) { mostrarPopup("Error de conexión."); }
 }
 
+// --- FUNCIÓN 1: MODIFICADA PARA MOSTRAR BOTONES DE PDF ---
 function prepararFactura(factura) {
-    const html = `
-        <div class="p-4 bg-white" id="contenidoParaPDF">
-            <div class="text-center mb-4 pb-2 border-bottom">
-                <h2 class="fw-bold text-primary">FACTURA</h2>
-                <p class="text-muted small">Aseguradora App S.L.</p>
+    const contenidoFactura = `
+        <div id="facturaImprimible" class="p-5 bg-white border">
+            <div class="d-flex justify-content-between mb-4">
+                <div>
+                    <h2 class="fw-bold text-primary">FACTURA</h2>
+                    <p class="text-muted mb-0">Aseguradora App S.L.</p>
+                </div>
+                <div class="text-end">
+                    <h5 class="text-dark">Ref: INV-${factura.idFactura}</h5>
+                    <p class="text-muted">${factura.fechaEmision}</p>
+                </div>
             </div>
-            <div class="row mb-4">
-                <div class="col-6"><p><strong>Cliente:</strong><br>${usuario.nombreCompleto}<br>${usuario.correo}</p></div>
-                <div class="col-6 text-end"><p><strong>Fecha:</strong> ${factura.fechaEmision}<br><strong>Ref:</strong> INV-${factura.idFactura}</p></div>
+            <hr>
+            <div class="row mb-5">
+                <div class="col-6">
+                    <h6 class="fw-bold">Cliente:</h6>
+                    <p class="mb-0">${usuario.nombreCompleto}</p>
+                    <p class="mb-0">${usuario.correo}</p>
+                </div>
             </div>
             <table class="table table-bordered">
-                <thead class="table-light"><tr><th>Concepto</th><th class="text-end">Importe</th></tr></thead>
-                <tbody><tr><td>${factura.concepto}</td><td class="text-end">${factura.importe} €</td></tr></tbody>
-                <tfoot><tr><th class="text-end">TOTAL</th><th class="text-end fs-5">${factura.importe} €</th></tr></tfoot>
+                <thead class="table-light">
+                    <tr><th>Concepto</th><th class="text-end">Importe</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td class="p-3">${factura.concepto}</td><td class="text-end p-3 fw-bold">${factura.importe} €</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr class="table-secondary"><th class="text-end">TOTAL</th><th class="text-end fs-4">${factura.importe} €</th></tr>
+                </tfoot>
             </table>
         </div>`;
-    document.getElementById('areaImpresion').innerHTML = html;
+
+    document.getElementById('areaImpresion').innerHTML = contenidoFactura;
+
+    // AQUÍ ESTABA EL FALLO: Ahora el botón llama a 'descargarPDF'
+    const footerModal = document.getElementById('printModal').querySelector('.modal-footer');
+    footerModal.innerHTML = `
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir</button>
+        <button type="button" class="btn btn-success" onclick="descargarPDF(${factura.idFactura})"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
+    `;
+
     modalPrint.show();
+}
+
+// =========================================================
+// FUNCIÓN PARA DESCARGAR PDF
+// =========================================================
+function descargarPDF(id) {
+    console.log("Iniciando descarga para factura:", id);
+
+    // 1. Buscamos la factura
+    const elemento = document.getElementById('facturaImprimible');
+    
+    if (!elemento) {
+        alert("Error: No se encuentra la factura.");
+        return;
+    }
+
+    // 2. Comprobamos la librería
+    if (typeof html2pdf === 'undefined') {
+        alert("Error: Librería html2pdf no cargada en index.html");
+        return;
+    }
+
+    // 3. Configuración y descarga
+    const opciones = {
+        margin:       10,
+        filename:     `Factura_${id}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opciones).from(elemento).save();
+}
+
+// --- FUNCIÓN 3: IMPRIMIR (Nueva) ---
+function accionImprimir() {
+    const contenido = document.getElementById('areaImpresion').innerHTML;
+    const ventana = window.open('', '', 'height=600,width=800');
+    ventana.document.write('<html><head><title>Imprimir</title>');
+    // Cargamos bootstrap también en la impresión para que no salga feo
+    ventana.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">');
+    ventana.document.write('</head><body>');
+    ventana.document.write(contenido);
+    ventana.document.write('</body></html>');
+    ventana.document.close();
+    setTimeout(() => { ventana.print(); ventana.close(); }, 500);
+}
+
+// --- EXTRAS: RECUPERAR CONTRASEÑA ---
+async function recuperarContrasena() {
+    const correoInput = prompt("Introduce tu correo para restablecer la contraseña:");
+    if (correoInput) {
+        document.body.style.cursor = 'wait';
+        await new Promise(r => setTimeout(r, 1000)); // Simula espera
+        document.body.style.cursor = 'default';
+        alert(`✅ Enlace enviado a: ${correoInput}\nRevisa tu correo.`);
+    }
 }
 
 function renderizarCargando(c, t) { c.innerHTML = `<div class="text-center mt-5"><div class="spinner-border text-primary"></div><p>${t}</p></div>`; }

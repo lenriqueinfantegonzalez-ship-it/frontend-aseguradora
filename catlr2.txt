@@ -1,3 +1,321 @@
+--- Directory Tree for: frontend-aseguradora ---
+Located at: /mnt/c/Users/Luis Enrique/Desktop/Proyecto-Final/frontend-aseguradora
+
+Info: 'tree' not found. Using built-in tree implementation.
+frontend-aseguradora/
+├── catlr2.txt
+├── dashboard.html
+├── index.html
+├── recuperar.html
+├── script.js
+└── styles.css
+
+--- File Contents (Recursive) for: frontend-aseguradora ---
+
+--- dashboard.html ---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Aseguradora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <nav class="navbar-top">
+        <div class="d-flex align-items-center">
+            <div class="logo-circle">A</div>
+            <span class="fw-bold fs-5">Aseguradora App</span>
+        </div>
+        <div class="d-none d-md-block fw-bold text-uppercase">Gestión de Pólizas</div>
+        <div class="text-end">
+            <button class="btn btn-outline-light btn-sm" onclick="abrirModalEmpresa()">
+                <i class="fa-solid fa-circle-info me-2"></i> Info Empresa
+            </button>
+        </div>
+    </nav>
+
+    <div class="sidebar d-flex flex-column justify-content-between">
+        <div>
+            <h6 class="text-uppercase text-muted small fw-bold mb-3 ps-2">Menú Principal</h6>
+            <nav class="nav flex-column">
+                <a href="#" class="nav-link active" onclick="cargarSeccion('mis-seguros')">
+                    <i class="fa-solid fa-shield-halved me-2"></i> Mis Seguros
+                </a>
+                <a href="#" class="nav-link" onclick="cargarSeccion('anadir-seguro')">
+                    <i class="fa-solid fa-circle-plus me-2"></i> Añadir Seguro
+                </a>
+                <a href="#" class="nav-link" onclick="cargarSeccion('facturas')">
+                    <i class="fa-solid fa-file-invoice-dollar me-2"></i> Facturas
+                </a>
+                <a href="#" class="nav-link" onclick="cargarSeccion('siniestros')">
+                    <i class="fa-solid fa-car-burst me-2"></i> Reportar Siniestro
+                </a>
+                <a href="#" class="nav-link" onclick="cargarSeccion('ayuda')">
+                    <i class="fa-solid fa-headset me-2"></i> Ayuda
+                </a>
+            </nav>
+        </div>
+        <div>
+            <hr class="text-muted">
+            <div class="user-badge mb-3">
+                <i class="fa-solid fa-user me-2"></i>
+                <span id="nombreUsuarioDisplay">Cargando...</span>
+            </div>
+            <nav class="nav flex-column">
+                <a href="#" class="nav-link" onclick="cargarSeccion('perfil')">
+                    <i class="fa-solid fa-user-gear me-2"></i> Mi Perfil
+                </a>
+                <a href="#" class="nav-link" onclick="cargarSeccion('config')">
+                    <i class="fa-solid fa-sliders me-2"></i> Configuración
+                </a>
+                <a href="#" class="nav-link" onclick="cargarSeccion('privacidad')">
+                    <i class="fa-solid fa-lock me-2"></i> Privacidad
+                </a>
+                <a href="#" class="nav-link text-danger mt-1" onclick="logout()">
+                    <i class="fa-solid fa-right-from-bracket me-2"></i> Salir
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <main class="main-content" id="contenido-dinamico">
+        <div class="text-center mt-5">
+            <div class="spinner-border text-primary"></div>
+        </div>
+    </main>
+
+    <div class="modal fade" id="empresaModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header bg-dark text-white"><h5 class="modal-title">Contacto</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body text-center">
+            <h4>Aseguradora S.L.</h4>
+            <p><i class="fa-solid fa-phone text-success"></i> 900 123 456</p>
+            <p><i class="fa-solid fa-envelope text-primary"></i> info@aseguradora.com</p>
+            <p><i class="fa-solid fa-location-dot text-danger"></i> Calle Mayor 123, Madrid</p>
+            <div class="bg-light p-3 rounded border">Mapa de Ubicación (Simulado)</div>
+        </div>
+    </div></div></div>
+
+    <div class="modal fade" id="infoModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header bg-primary text-white"><h5 class="modal-title">Aviso</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" id="modalMensaje"></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Aceptar</button></div>
+    </div></div></div>
+
+    <div class="modal fade" id="confirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header bg-danger text-white"><h5 class="modal-title">Eliminar</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">¿Estás seguro? Esta acción no se puede deshacer.</div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger" id="btnConfirmarBorrado">Sí, Eliminar</button>
+        </div>
+    </div></div></div>
+
+    <div class="modal fade" id="printModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Vista Previa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" id="areaImpresion"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Imprimir</button>
+            <button type="button" class="btn btn-success" onclick="descargarPDF()">📥 Descargar PDF</button>
+        </div>
+    </div></div></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+--- index.html ---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Aseguradora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .login-card { width: 100%; max-width: 400px; padding: 2rem; border-radius: 10px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <h2 class="text-primary fw-bold">ASEGURADORA</h2>
+            <p class="text-muted">Gestión integral de seguros</p>
+        </div>
+        <form id="loginForm">
+            <div class="mb-3">
+                <label class="form-label">Correo Electrónico</label>
+                <input type="email" class="form-control" id="correo" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="password" required>
+            </div>
+            <div class="text-center mt-3">
+                <a href="#" class="text-decoration-none small" onclick="recuperarContrasena()">¿Olvidaste tu contraseña?</a>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Entrar</button>
+            <div id="error-message" class="text-danger mt-3 text-center" style="display: none;"></div>
+
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const correo = document.getElementById('correo').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-message');
+
+            try {
+                // Conexión con tu Backend Java
+                const response = await fetch('http://localhost:8081/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo, password })
+                });
+
+                if (response.ok) {
+                    const usuario = await response.json();
+                    sessionStorage.setItem('usuario', JSON.stringify(usuario)); // Guardamos sesión [cite: 56]
+                    window.location.href = 'dashboard.html'; // Redirigimos
+                } else {
+                    errorDiv.textContent = 'Usuario o contraseña incorrectos';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error: El servidor Backend no responde';
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+--- recuperar.html ---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restablecer Contraseña</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f0f2f5; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card-rec { width: 100%; max-width: 400px; padding: 2rem; border-radius: 10px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="card-rec text-center">
+        <div class="mb-4">
+            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                <i class="fa-solid fa-lock-open fa-2x"></i>
+            </div>
+        </div>
+        <h3 class="mb-2 text-dark">Restablecer Contraseña</h3>
+        <p class="text-muted mb-4 small">Introduce tu correo y define una nueva clave.</p>
+        
+        <form id="formReset">
+            <div class="mb-3 text-start">
+                <label class="form-label fw-bold small">Correo Electrónico</label>
+                <input type="email" class="form-control" id="emailRec" required placeholder="ej: admin@test.com">
+            </div>
+            
+            <div class="mb-4 text-start">
+                <label class="form-label fw-bold small">Nueva Contraseña</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="newPass" required placeholder="Mínimo 4 caracteres">
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePass()">
+                        <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary fw-bold">Actualizar Contraseña</button>
+                <a href="index.html" class="btn btn-light text-muted">Cancelar y Volver</a>
+            </div>
+        </form>
+
+        <div id="mensajeExito" class="alert alert-success mt-3 d-none text-start small">
+            <i class="fa-solid fa-check-circle me-1"></i> <strong>¡Éxito!</strong> Contraseña cambiada. Redirigiendo...
+        </div>
+        <div id="mensajeError" class="alert alert-danger mt-3 d-none text-start small"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8081/api/auth/reset-password';
+
+        document.getElementById('formReset').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const correo = document.getElementById('emailRec').value;
+            const pass = document.getElementById('newPass').value;
+            const btn = e.target.querySelector('button[type="submit"]');
+            const msgExito = document.getElementById('mensajeExito');
+            const msgError = document.getElementById('mensajeError');
+
+            // Limpiar mensajes previos
+            msgExito.classList.add('d-none');
+            msgError.classList.add('d-none');
+            btn.disabled = true;
+            btn.textContent = "Verificando...";
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo: correo, nuevaPassword: pass })
+                });
+
+                if (response.ok) {
+                    // Si el correo existía y se cambió
+                    msgExito.classList.remove('d-none');
+                    btn.textContent = "¡Hecho!";
+                    
+                    // Redirigir al login tras 2 segundos
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                } else {
+                    // Si el correo no existe (400 Bad Request)
+                    const textoError = await response.text();
+                    msgError.textContent = textoError || "Error: Correo no encontrado.";
+                    msgError.classList.remove('d-none');
+                    btn.disabled = false;
+                    btn.textContent = "Actualizar Contraseña";
+                }
+            } catch (error) {
+                console.error(error);
+                msgError.textContent = "Error de conexión con el servidor.";
+                msgError.classList.remove('d-none');
+                btn.disabled = false;
+                btn.textContent = "Actualizar Contraseña";
+            }
+        });
+
+        // Función para ver/ocultar contraseña
+        function togglePass() {
+            const input = document.getElementById('newPass');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.replace("fa-eye", "fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.replace("fa-eye-slash", "fa-eye");
+            }
+        }
+    </script>
+</body>
+</html>
+--- script.js ---
 // =========================================================
 // 1. CONFIGURACIÓN Y VARIABLES GLOBALES
 // =========================================================
@@ -43,7 +361,6 @@ if (!usuarioGuardado) {
 // =========================================================
 async function cargarSeccion(seccion) {
     const contenedor = document.getElementById('contenido-dinamico');
-    
     // Quitar clase 'active' de todos los links
     document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
     
@@ -99,7 +416,7 @@ async function cargarSeccion(seccion) {
     } else if (seccion === 'config') {
         renderizarConfiguracion(contenedor);
 
-    // --- PRIVACIDAD (Extendida) ---
+    // --- PRIVACIDAD ---
     } else if (seccion === 'privacidad') {
         renderizarPrivacidad(contenedor);
     }
@@ -154,7 +471,6 @@ function renderizarFacturas(lista, contenedor) {
     <h3 class="mb-4">Mis Facturas</h3>
     <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
     <thead class="table-light"><tr><th class="ps-4">Concepto</th><th>Fecha</th><th>Importe</th><th class="text-end pe-4">Acciones</th></tr></thead><tbody>`;
-    
     lista.forEach(f => {
         const jsonF = JSON.stringify(f).replace(/"/g, '&quot;');
         html += `
@@ -190,12 +506,18 @@ function renderizarSiniestros(siniestros, seguros, contenedor) {
             listaHTML += `
             <div class="card mb-3 border-${color} border-start border-3 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <h6 class="fw-bold">Póliza: ${s.seguro ? s.seguro.numPoliza : '???'}</h6>
-                        <span class="badge bg-${color}">${s.estado}</span>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold mb-0">Póliza: ${s.seguro ? s.seguro.numPoliza : '???'}</h6>
+                            <span class="badge bg-${color} mt-1">${s.estado}</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="solicitarBorrado('siniestros', ${s.idSiniestro})" title="Eliminar Siniestro">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
                     </div>
-                    <p class="mb-1 small text-muted">${s.fechaSuceso}</p>
-                    <p class="mb-2">${s.descripcion}</p>
+                    <hr class="my-2">
+                    <p class="mb-1 small text-muted"><i class="fa-solid fa-calendar-day me-1"></i> ${s.fechaSuceso}</p>
+                    <p class="mb-2 text-dark">${s.descripcion}</p>
                     <div class="bg-light p-2 rounded small fst-italic border"><i class="fa-solid fa-user-shield me-1"></i> Resolución: ${s.resolucion}</div>
                 </div>
             </div>`;
@@ -239,7 +561,6 @@ function renderizarFormularioAlta(tipos, contenedor) {
     let opts = `<option value="" disabled selected>-- Seleccione Tipo --</option>`;
     tipos.forEach(t => opts += `<option value="${t.idTipo}">${t.nombre} (${t.precioBase}€)</option>`);
     const poliza = 'POL-' + Math.floor(Math.random()*99999);
-
     contenedor.innerHTML = `
     <h3 class="mb-4">Contratar Nuevo Seguro</h3>
     <div class="card shadow-sm border-0" style="max-width: 700px;"><div class="card-body p-4">
@@ -253,7 +574,6 @@ function renderizarFormularioAlta(tipos, contenedor) {
         <button type="submit" class="btn btn-primary w-100">Contratar</button>
     </form></div></div>`;
     
-    // Fechas inteligentes
     const iIni = document.getElementById('fInicio');
     const iRen = document.getElementById('fRenov');
     if(iIni && iRen) {
@@ -315,7 +635,7 @@ function renderizarPerfil(c) {
     });
 }
 
-// --- VISTA AYUDA (COMPLETA) ---
+// --- VISTA AYUDA ---
 function renderizarAyuda(contenedor) {
     contenedor.innerHTML = `
     <h3 class="mb-4">Centro de Ayuda y Soporte</h3>
@@ -368,7 +688,7 @@ function renderizarAyuda(contenedor) {
     });
 }
 
-// --- VISTA PRIVACIDAD (EXTENDIDA) ---
+// --- VISTA PRIVACIDAD ---
 function renderizarPrivacidad(contenedor) {
     const year = new Date().getFullYear();
     contenedor.innerHTML = `
@@ -425,7 +745,7 @@ function renderizarPrivacidad(contenedor) {
                 <p class="mb-1"><strong>&copy; ${year} Aseguradora App S.L.</strong> Todos los derechos reservados.</p>
                 <p>Inscrita en el Registro Mercantil de Madrid, Tomo 1234, Folio 56, Hoja M-12345.</p>
                 <div class="mt-3">
-                    <a href="#" class="text-decoration-none me-3">Términos de Uso</a> | 
+                    <a href="#" class="text-decoration-none me-3">Términos de Uso</a> |
                     <a href="#" class="text-decoration-none mx-3">Política de Cookies</a> | 
                     <a href="#" class="text-decoration-none ms-3">Aviso Legal</a>
                 </div>
@@ -450,37 +770,218 @@ async function ejecutarBorrado() {
         
         if (res.ok) {
             mostrarPopup("Eliminado correctamente.");
-            cargarSeccion(itemABorrar.tipo === 'seguros' ? 'mis-seguros' : 'facturas');
+            // Refrescar la lista correcta
+            if (itemABorrar.tipo === 'seguros') cargarSeccion('mis-seguros');
+            else if (itemABorrar.tipo === 'facturas') cargarSeccion('facturas');
+            else if (itemABorrar.tipo === 'siniestros') cargarSeccion('siniestros');
         } else {
-            if (itemABorrar.tipo === 'seguros') mostrarPopup("⚠️ Error: Cancela primero la factura asociada.");
-            else mostrarPopup("Error al eliminar.");
+            // MENSAJE MEJORADO
+            if (itemABorrar.tipo === 'seguros') {
+                mostrarPopup("⚠️ No se puede eliminar: Este seguro tiene facturas o siniestros asociados. Elimina primero el historial.");
+            } else {
+                mostrarPopup("Error al eliminar.");
+            }
         }
     } catch (e) { mostrarPopup("Error de conexión."); }
 }
 
+// --- FUNCIÓN 1: MODIFICADA PARA MOSTRAR BOTONES DE PDF ---
 function prepararFactura(factura) {
-    const html = `
-        <div class="p-4 bg-white" id="contenidoParaPDF">
-            <div class="text-center mb-4 pb-2 border-bottom">
-                <h2 class="fw-bold text-primary">FACTURA</h2>
-                <p class="text-muted small">Aseguradora App S.L.</p>
+    const contenidoFactura = `
+        <div id="facturaImprimible" class="p-5 bg-white border">
+            <div class="d-flex justify-content-between mb-4">
+                <div>
+                    <h2 class="fw-bold text-primary">FACTURA</h2>
+                    <p class="text-muted mb-0">Aseguradora App S.L.</p>
+                </div>
+                <div class="text-end">
+                    <h5 class="text-dark">Ref: INV-${factura.idFactura}</h5>
+                    <p class="text-muted">${factura.fechaEmision}</p>
+                </div>
             </div>
-            <div class="row mb-4">
-                <div class="col-6"><p><strong>Cliente:</strong><br>${usuario.nombreCompleto}<br>${usuario.correo}</p></div>
-                <div class="col-6 text-end"><p><strong>Fecha:</strong> ${factura.fechaEmision}<br><strong>Ref:</strong> INV-${factura.idFactura}</p></div>
+            <hr>
+            <div class="row mb-5">
+                <div class="col-6">
+                    <h6 class="fw-bold">Cliente:</h6>
+                    <p class="mb-0">${usuario.nombreCompleto}</p>
+                    <p class="mb-0">${usuario.correo}</p>
+                </div>
             </div>
             <table class="table table-bordered">
-                <thead class="table-light"><tr><th>Concepto</th><th class="text-end">Importe</th></tr></thead>
-                <tbody><tr><td>${factura.concepto}</td><td class="text-end">${factura.importe} €</td></tr></tbody>
-                <tfoot><tr><th class="text-end">TOTAL</th><th class="text-end fs-5">${factura.importe} €</th></tr></tfoot>
+                <thead class="table-light">
+                    <tr><th>Concepto</th><th class="text-end">Importe</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td class="p-3">${factura.concepto}</td><td class="text-end p-3 fw-bold">${factura.importe} €</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr class="table-secondary"><th class="text-end">TOTAL</th><th class="text-end fs-4">${factura.importe} €</th></tr>
+                </tfoot>
             </table>
         </div>`;
-    document.getElementById('areaImpresion').innerHTML = html;
+
+    document.getElementById('areaImpresion').innerHTML = contenidoFactura;
+
+    // AQUÍ ESTABA EL FALLO: Ahora el botón llama a 'descargarPDF'
+    const footerModal = document.getElementById('printModal').querySelector('.modal-footer');
+    footerModal.innerHTML = `
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir</button>
+        <button type="button" class="btn btn-success" onclick="descargarPDF(${factura.idFactura})"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
+    `;
+
     modalPrint.show();
 }
 
+// =========================================================
+// FUNCIÓN PARA DESCARGAR PDF
+// =========================================================
+function descargarPDF(id) {
+    console.log("Iniciando descarga para factura:", id);
+
+    // 1. Buscamos la factura
+    const elemento = document.getElementById('facturaImprimible');
+    
+    if (!elemento) {
+        alert("Error: No se encuentra la factura.");
+        return;
+    }
+
+    // 2. Comprobamos la librería
+    if (typeof html2pdf === 'undefined') {
+        alert("Error: Librería html2pdf no cargada en index.html");
+        return;
+    }
+
+    // 3. Configuración y descarga
+    const opciones = {
+        margin:       10,
+        filename:     `Factura_${id}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opciones).from(elemento).save();
+}
+
+// --- FUNCIÓN 3: IMPRIMIR (Nueva) ---
+function accionImprimir() {
+    const contenido = document.getElementById('areaImpresion').innerHTML;
+    const ventana = window.open('', '', 'height=600,width=800');
+    ventana.document.write('<html><head><title>Imprimir</title>');
+    // Cargamos bootstrap también en la impresión para que no salga feo
+    ventana.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">');
+    ventana.document.write('</head><body>');
+    ventana.document.write(contenido);
+    ventana.document.write('</body></html>');
+    ventana.document.close();
+    setTimeout(() => { ventana.print(); ventana.close(); }, 500);
+}
+
+// --- EXTRAS: RECUPERAR CONTRASEÑA ---
+async function recuperarContrasena() {
+    const correoInput = prompt("Introduce tu correo para restablecer la contraseña:");
+    if (correoInput) {
+        document.body.style.cursor = 'wait';
+        await new Promise(r => setTimeout(r, 1000)); // Simula espera
+        document.body.style.cursor = 'default';
+        alert(`✅ Enlace enviado a: ${correoInput}\nRevisa tu correo.`);
+    }
+}
+
 function renderizarCargando(c, t) { c.innerHTML = `<div class="text-center mt-5"><div class="spinner-border text-primary"></div><p>${t}</p></div>`; }
-function mostrarError(c) { c.innerHTML = '<div class="alert alert-danger">Error de conexión.</div>'; }
+function mostrarError(c) { c.innerHTML = '<div class="alert alert-danger">Error de conexión con el servidor.</div>'; }
 function mostrarPopup(msg) { document.getElementById('modalMensaje').textContent = msg; modalInfo.show(); }
 function abrirModalEmpresa() { modalEmpresa.show(); }
 function logout() { sessionStorage.removeItem('usuario'); window.location.href = 'index.html'; }
+--- styles.css ---
+/* Layout Global */
+body {
+    padding-top: 60px; /* Espacio para Header */
+    background-color: #f8f9fa;
+}
+
+/* Header Fijo */
+.navbar-top {
+    height: 60px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1030;
+    background-color: #0d6efd; /* Azul Bootstrap */
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.logo-circle {
+    width: 40px; height: 40px;
+    background: white;
+    color: #0d6efd;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Sidebar Fijo */
+.sidebar {
+    position: fixed;
+    top: 60px; bottom: 0; left: 0;
+    width: 260px;
+    background-color: white;
+    border-right: 1px solid #dee2e6;
+    padding: 20px 10px;
+    overflow-y: auto;
+}
+
+/* Contenido Principal */
+.main-content {
+    margin-left: 260px; /* Deja sitio al sidebar */
+    padding: 30px;
+}
+
+/* Enlaces */
+.nav-link {
+    color: #495057;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    padding: 10px 15px;
+}
+.nav-link:hover {
+    background-color: #e9ecef;
+}
+.nav-link.active {
+    background-color: #e7f1ff;
+    color: #0d6efd;
+    font-weight: bold;
+}
+
+.user-badge {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: bold;
+}
+/* Ajustes para textos legales */
+.text-justify {
+    text-align: justify;
+}
+
+/* Ajustes tarjetas configuración */
+.card-header {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* Iconos en formularios */
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+--- End of Listing ---

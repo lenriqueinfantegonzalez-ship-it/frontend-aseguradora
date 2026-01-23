@@ -4,14 +4,109 @@ Located at: /mnt/c/Users/Luis Enrique/Desktop/Proyecto-Final/frontend-asegurador
 Info: 'tree' not found. Using built-in tree implementation.
 frontend-aseguradora/
 ├── catlr2.txt
+├── confirmar.html
 ├── dashboard.html
 ├── index.html
 ├── recuperar.html
+├── restablecer.html
 ├── script.js
 └── styles.css
 
 --- File Contents (Recursive) for: frontend-aseguradora ---
 
+--- confirmar.html ---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activar Cuenta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #0d6efd 0%, #0099ff 100%);
+            height: 100vh; display: flex; align-items: center; justify-content: center; 
+        }
+        .card-confirm { width: 100%; max-width: 450px; padding: 2.5rem; border-radius: 15px; background: white; box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+    <div class="card-confirm text-center">
+        <div id="loadingIcon" class="mb-4">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+        </div>
+        
+        <div id="successIcon" class="mb-4 d-none">
+            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <i class="fa-solid fa-check fa-3x"></i>
+            </div>
+        </div>
+        <div id="errorIcon" class="mb-4 d-none">
+            <div class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <i class="fa-solid fa-xmark fa-3x"></i>
+            </div>
+        </div>
+
+        <h3 id="titulo" class="mb-3 fw-bold text-dark">Verificando...</h3>
+        <p id="mensaje" class="text-muted mb-4">Estamos confirmando tu correo electrónico, por favor espera.</p>
+        
+        <a href="index.html" id="btnLogin" class="btn btn-primary btn-lg w-100 fw-bold d-none">Ir al Inicio de Sesión</a>
+    </div>
+
+    <script>
+        // Al cargar la página, extraemos el token y llamamos al servidor
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+
+            if (!token) {
+                mostrarError("Enlace inválido o incompleto.");
+                return;
+            }
+
+            try {
+                // Llamada al Backend para confirmar
+                const response = await fetch('http://localhost:8081/api/auth/confirm-account', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token })
+                });
+
+                if (response.ok) {
+                    mostrarExito();
+                } else {
+                    const texto = await response.text();
+                    mostrarError(texto || "No se pudo activar la cuenta.");
+                }
+            } catch (error) {
+                mostrarError("Error de conexión con el servidor.");
+            }
+        });
+
+        function mostrarExito() {
+            document.getElementById('loadingIcon').classList.add('d-none');
+            document.getElementById('successIcon').classList.remove('d-none');
+            document.getElementById('titulo').textContent = "¡Cuenta Activada!";
+            document.getElementById('mensaje').textContent = "Tu correo ha sido confirmado correctamente. Ya puedes acceder a la plataforma.";
+            document.getElementById('btnLogin').classList.remove('d-none');
+        }
+
+        function mostrarError(msg) {
+            document.getElementById('loadingIcon').classList.add('d-none');
+            document.getElementById('errorIcon').classList.remove('d-none');
+            document.getElementById('titulo').textContent = "Error de Activación";
+            document.getElementById('mensaje').textContent = msg;
+            document.getElementById('mensaje').classList.add('text-danger');
+            
+            const btn = document.getElementById('btnLogin');
+            btn.classList.remove('d-none');
+            btn.textContent = "Volver al Inicio";
+            btn.classList.replace('btn-primary', 'btn-secondary');
+        }
+    </script>
+</body>
+</html>
 --- dashboard.html ---
 <!DOCTYPE html>
 <html lang="es">
@@ -22,6 +117,8 @@ frontend-aseguradora/
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -31,101 +128,219 @@ frontend-aseguradora/
             <span class="fw-bold fs-5">Aseguradora App</span>
         </div>
         <div class="d-none d-md-block fw-bold text-uppercase">Gestión de Pólizas</div>
-        <div class="text-end">
-            <button class="btn btn-outline-light btn-sm" onclick="abrirModalEmpresa()">
-                <i class="fa-solid fa-circle-info me-2"></i> Info Empresa
+        
+        <div class="d-flex align-items-center">
+            <div class="bg-light rounded-pill px-3 py-1 me-3 d-flex align-items-center border">
+                <i class="fa-solid fa-user-circle text-primary me-2 fs-5"></i>
+                <span id="nombreUsuarioDisplay" class="small fw-bold text-dark">Usuario</span>
+            </div>
+            <button onclick="logout()" class="btn btn-outline-danger btn-sm" title="Cerrar Sesión">
+                <i class="fa-solid fa-power-off"></i>
             </button>
         </div>
     </nav>
 
-    <div class="sidebar d-flex flex-column justify-content-between">
-        <div>
-            <h6 class="text-uppercase text-muted small fw-bold mb-3 ps-2">Menú Principal</h6>
-            <nav class="nav flex-column">
-                <a href="#" class="nav-link active" onclick="cargarSeccion('mis-seguros')">
-                    <i class="fa-solid fa-shield-halved me-2"></i> Mis Seguros
-                </a>
-                <a href="#" class="nav-link" onclick="cargarSeccion('anadir-seguro')">
-                    <i class="fa-solid fa-circle-plus me-2"></i> Añadir Seguro
-                </a>
-                <a href="#" class="nav-link" onclick="cargarSeccion('facturas')">
-                    <i class="fa-solid fa-file-invoice-dollar me-2"></i> Facturas
-                </a>
-                <a href="#" class="nav-link" onclick="cargarSeccion('siniestros')">
-                    <i class="fa-solid fa-car-burst me-2"></i> Reportar Siniestro
-                </a>
-                <a href="#" class="nav-link" onclick="cargarSeccion('ayuda')">
-                    <i class="fa-solid fa-headset me-2"></i> Ayuda
-                </a>
-            </nav>
-        </div>
-        <div>
-            <hr class="text-muted">
-            <div class="user-badge mb-3">
-                <i class="fa-solid fa-user me-2"></i>
-                <span id="nombreUsuarioDisplay">Cargando...</span>
-            </div>
-            <nav class="nav flex-column">
-                <a href="#" class="nav-link" onclick="cargarSeccion('perfil')">
-                    <i class="fa-solid fa-user-gear me-2"></i> Mi Perfil
-                </a>
-                <a href="#" class="nav-link" onclick="cargarSeccion('config')">
-                    <i class="fa-solid fa-sliders me-2"></i> Configuración
-                </a>
-                <a href="#" class="nav-link" onclick="cargarSeccion('privacidad')">
-                    <i class="fa-solid fa-lock me-2"></i> Privacidad
-                </a>
-                <a href="#" class="nav-link text-danger mt-1" onclick="logout()">
-                    <i class="fa-solid fa-right-from-bracket me-2"></i> Salir
-                </a>
-            </nav>
+    <div class="sidebar">
+        <div class="text-muted small fw-bold text-uppercase mb-3 px-2">Menú Principal</div>
+        <nav class="nav flex-column mb-4">
+            <a href="#" class="nav-link active" onclick="cargarSeccion('mis-seguros')">
+                <i class="fa-solid fa-shield-halved me-2"></i> Mis Seguros
+            </a>
+            <a href="#" class="nav-link admin-only text-primary" onclick="cargarSeccion('anadir-seguro')">
+                <i class="fa-solid fa-plus-circle me-2"></i> Contratar Seguro
+            </a>
+            <a href="#" class="nav-link" onclick="cargarSeccion('facturas')">
+                <i class="fa-solid fa-file-invoice-dollar me-2"></i> Facturas
+            </a>
+            <a href="#" class="nav-link" onclick="cargarSeccion('siniestros')">
+                <i class="fa-solid fa-car-crash me-2"></i> Siniestros
+            </a>
+            <a href="#" class="nav-link" onclick="cargarSeccion('usuarios')">
+                <i class="fa-solid fa-users me-2"></i> Usuarios
+            </a>
+        </nav>
+
+        <div class="text-muted small fw-bold text-uppercase mb-3 px-2">Mi Cuenta</div>
+        <nav class="nav flex-column mb-4">
+            <a href="#" class="nav-link" onclick="cargarSeccion('perfil')">
+                <i class="fa-solid fa-id-card me-2"></i> Mi Perfil
+            </a>
+            <a href="#" class="nav-link" onclick="cargarSeccion('config')">
+                <i class="fa-solid fa-sliders me-2"></i> Configuración
+            </a>
+        </nav>
+
+        <div class="text-muted small fw-bold text-uppercase mb-3 px-2">Soporte</div>
+        <nav class="nav flex-column">
+            <a href="#" class="nav-link" onclick="cargarSeccion('ayuda')">
+                <i class="fa-solid fa-circle-question me-2"></i> Ayuda
+            </a>
+            <a href="#" class="nav-link" onclick="cargarSeccion('privacidad')">
+                <i class="fa-solid fa-lock me-2"></i> Privacidad
+            </a>
+        </nav>
+        
+        <div class="mt-auto px-2 pt-4">
+            <button class="btn btn-light w-100 border btn-sm text-muted" onclick="modalEmpresa.show()">
+                <i class="fa-solid fa-building me-2"></i> Info Empresa
+            </button>
         </div>
     </div>
 
-    <main class="main-content" id="contenido-dinamico">
-        <div class="text-center mt-5">
-            <div class="spinner-border text-primary"></div>
+    <div class="main-content">
+        <div id="contenido-dinamico">
+            <div class="text-center mt-5">
+                <div class="spinner-border text-primary"></div>
+            </div>
         </div>
-    </main>
+    </div>
 
-    <div class="modal fade" id="empresaModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header bg-dark text-white"><h5 class="modal-title">Contacto</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body text-center">
-            <h4>Aseguradora S.L.</h4>
-            <p><i class="fa-solid fa-phone text-success"></i> 900 123 456</p>
-            <p><i class="fa-solid fa-envelope text-primary"></i> info@aseguradora.com</p>
-            <p><i class="fa-solid fa-location-dot text-danger"></i> Calle Mayor 123, Madrid</p>
-            <div class="bg-light p-3 rounded border">Mapa de Ubicación (Simulado)</div>
+    <div class="modal fade" id="infoModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Aviso</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <p id="modalMensaje" class="mb-0 fs-5"></p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Aceptar</button>
+                </div>
+            </div>
         </div>
-    </div></div></div>
+    </div>
 
-    <div class="modal fade" id="infoModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
-        <div class="modal-header bg-primary text-white"><h5 class="modal-title">Aviso</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body" id="modalMensaje"></div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Aceptar</button></div>
-    </div></div></div>
-
-    <div class="modal fade" id="confirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
-        <div class="modal-header bg-danger text-white"><h5 class="modal-title">Eliminar</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body">¿Estás seguro? Esta acción no se puede deshacer.</div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-danger" id="btnConfirmarBorrado">Sí, Eliminar</button>
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <i class="fa-solid fa-trash-can text-danger fa-3x mb-3"></i>
+                    <p class="fw-bold">¿Estás seguro de que quieres eliminar esto?</p>
+                    <p class="small text-muted">Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarBorrado">Sí, Eliminar</button>
+                </div>
+            </div>
         </div>
-    </div></div></div>
+    </div>
 
-    <div class="modal fade" id="printModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Vista Previa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body" id="areaImpresion"></div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Imprimir</button>
-            <button type="button" class="btn btn-success" onclick="descargarPDF()">📥 Descargar PDF</button>
+    <div class="modal fade" id="printModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Documento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-light" id="areaImpresion"></div>
+                <div class="modal-footer">
+                    </div>
+            </div>
         </div>
-    </div></div></div>
+    </div>
 
+    <div class="modal fade" id="empresaModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Sobre Nosotros</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <p><strong>Aseguradora App S.L.</strong></p>
+                    <p>Calle Principal 123, Madrid</p>
+                    <p>CIF: B-12345678</p>
+                    <p>Email: contacto@aseguradora.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalCrearUsuario" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold">Nuevo Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCrearUsuario">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre Completo</label>
+                            <input type="text" id="newUserName" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Correo Electrónico</label>
+                            <input type="email" id="newUserEmail" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contraseña</label>
+                            <input type="password" id="newUserPass" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Rol</label>
+                            <select id="newUserRol" class="form-select">
+                                <option value="USER">Usuario (Cliente)</option>
+                                <option value="ADMIN">Administrador</option>
+                            </select>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">Crear Usuario</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modal2FA" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Configurar 2FA</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div id="step1-qr">
+                    <p class="mb-3">1. Escanea este QR con <strong>Google Authenticator</strong>:</p>
+                    <div id="qrContainer" class="d-flex justify-content-center mb-3"></div>
+
+                    <p class="text-muted small mt-3">2. Introduce el código de 6 dígitos que te da la app:</p>
+                    <input type="text" id="inputCodeConfirm" class="form-control text-center fs-3 letter-spacing mb-3" maxlength="6" placeholder="000000">
+
+                    <button class="btn btn-success w-100 fw-bold" onclick="confirmarActivacion2FA()">
+                        <i class="fa-solid fa-check me-2"></i> Confirmar y Activar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalBorrado" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">Zona de Peligro</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <h5 class="fw-bold">¿Seguro que quieres borrar?</h5>
+                <p class="text-muted">Escribe <strong class="text-danger">ELIMINAR</strong> abajo.</p>
+                
+                <input type="text" id="inputBorradoConfirm" class="form-control text-center mb-3" 
+                       placeholder="Escribe ELIMINAR" onkeyup="verificarTextoBorrado_V2()">
+                
+                <button id="btnBorrarFinal" class="btn btn-danger w-100 fw-bold" disabled onclick="ejecutarBorrado_V2()">
+                    Confirmar Eliminación
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
@@ -138,62 +353,166 @@ frontend-aseguradora/
     <title>Login - Aseguradora</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .login-card { width: 100%; max-width: 400px; padding: 2rem; border-radius: 10px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        body {
+            background: linear-gradient(135deg, #0d6efd 0%, #0099ff 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        .brand-logo {
+            width: 80px;
+            height: 80px;
+            background: #0d6efd;
+            color: white;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; font-weight: bold;
+            margin: 0 auto 20px;
+        }
     </style>
 </head>
 <body>
+
     <div class="login-card">
-        <div class="text-center mb-4">
-            <h2 class="text-primary fw-bold">ASEGURADORA</h2>
-            <p class="text-muted">Gestión integral de seguros</p>
-        </div>
+        <div class="brand-logo">A</div>
+        <h3 id="tituloLogin" class="text-center mb-4 fw-bold text-primary">Bienvenido</h3>
+        
         <form id="loginForm">
             <div class="mb-3">
-                <label class="form-label">Correo Electrónico</label>
-                <input type="email" class="form-control" id="correo" required>
+                <label for="correo" class="form-label fw-bold">Correo Electrónico</label>
+                <input type="email" class="form-control" id="correo" placeholder="ejemplo@correo.com" required>
             </div>
             <div class="mb-3">
-                <label class="form-label">Contraseña</label>
-                <input type="password" class="form-control" id="password" required>
+                <label for="password" class="form-label fw-bold">Contraseña</label>
+                <input type="password" class="form-control" id="password" placeholder="••••••••" required>
             </div>
-            <div class="text-center mt-3">
-                <a href="#" class="text-decoration-none small" onclick="recuperarContrasena()">¿Olvidaste tu contraseña?</a>
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary btn-lg fw-bold">Iniciar Sesión</button>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Entrar</button>
-            <div id="error-message" class="text-danger mt-3 text-center" style="display: none;"></div>
-
+            <div class="text-center">
+                <a href="recuperar.html" class="text-decoration-none small text-muted">¿Olvidaste tu contraseña?</a>
+            </div>
         </form>
+
+        <form id="form2FA" class="d-none">
+            <div class="alert alert-info small text-center">
+                Abre tu app <strong>Google Authenticator</strong> e introduce el código:
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Código (6 dígitos)</label>
+                <input type="text" class="form-control text-center fs-4" id="codigoInput" 
+                       maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                       style="letter-spacing: 5px;" required>
+            </div>
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-success btn-lg fw-bold">Verificar</button>
+            </div>
+        </form>
+
+        <div id="errorMsg" class="alert alert-danger mt-3 d-none text-center small"></div>
     </div>
 
     <script>
+        let correoGuardado = "";
+
+        // --- LOGIN ---
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const correo = document.getElementById('correo').value;
             const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('error-message');
+            const errorDiv = document.getElementById('errorMsg');
+            if (errorDiv) errorDiv.classList.add('d-none');
 
             try {
-                // Conexión con tu Backend Java
                 const response = await fetch('http://localhost:8081/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ correo, password })
                 });
 
                 if (response.ok) {
-                    const usuario = await response.json();
-                    sessionStorage.setItem('usuario', JSON.stringify(usuario)); // Guardamos sesión [cite: 56]
-                    window.location.href = 'dashboard.html'; // Redirigimos
+                    const data = await response.json();
+
+                    if (data.status === '2FA_REQUIRED') {
+                        // El usuario TIENE activado el 2FA, pedimos código
+                        correoGuardado = data.correo;
+                        mostrarPantallaCodigo();
+                    } else {
+                        // El usuario NO tiene 2FA, entra directo
+                        guardarSesionYRedirigir(data.usuario);
+                    }
                 } else {
-                    errorDiv.textContent = 'Usuario o contraseña incorrectos';
-                    errorDiv.style.display = 'block';
+                    mostrarError('Credenciales incorrectas.');
                 }
             } catch (error) {
-                errorDiv.textContent = 'Error: El servidor Backend no responde';
-                errorDiv.style.display = 'block';
+                console.error(error);
+                mostrarError('Error de conexión.');
             }
         });
+
+       // --- VERIFICAR CÓDIGO ---
+        document.getElementById('form2FA').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const codigo = document.getElementById('codigoInput').value.replace(/\s/g, '');
+            const errorDiv = document.getElementById('errorMsg');
+            if (errorDiv) errorDiv.classList.add('d-none');
+
+            try {
+                const response = await fetch('http://localhost:8081/api/auth/verify-2fa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ correo: correoGuardado, codigo: codigo })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    guardarSesionYRedirigir(data.usuario);
+                } else {
+                    // --- AQUÍ ESTÁ EL CAMBIO PARA EL LÍMITE ---
+                    if (response.status === 403) {
+                        alert("Has superado el límite de 3 intentos. Volviendo al inicio de sesión...");
+                        location.reload(); // Esto recarga la página y te manda al Login
+                        return;
+                    }
+
+                    const textoError = await response.text();
+                    mostrarError(textoError || 'Código incorrecto.');
+                }
+            } catch (error) {
+                console.error(error);
+                mostrarError('Error al verificar.');
+            }
+        });
+
+        function mostrarPantallaCodigo() {
+            document.getElementById('loginForm').classList.add('d-none');
+            document.getElementById('form2FA').classList.remove('d-none');
+            document.getElementById('tituloLogin').textContent = "Verificación 2FA";
+            document.getElementById('codigoInput').focus();
+        }
+
+        function guardarSesionYRedirigir(usuario) {
+            if (!usuario.idUsuario && usuario.id) usuario.idUsuario = usuario.id;
+            sessionStorage.setItem('usuario', JSON.stringify(usuario));
+            window.location.href = 'dashboard.html';
+        }
+
+        function mostrarError(msg) {
+            const d = document.getElementById('errorMsg');
+            if(d) { d.textContent = msg; d.classList.remove('d-none'); }
+            else alert(msg);
+        }
     </script>
 </body>
 </html>
@@ -203,107 +522,202 @@ frontend-aseguradora/
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restablecer Contraseña</title>
+    <title>Recuperar Contraseña</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f0f2f5; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .card-rec { width: 100%; max-width: 400px; padding: 2rem; border-radius: 10px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        body { 
+            background: linear-gradient(135deg, #f0f2f5 0%, #e1e4e8 100%);
+            height: 100vh; display: flex; align-items: center; justify-content: center; 
+        }
+        .card-rec { width: 100%; max-width: 400px; padding: 2rem; border-radius: 15px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
     <div class="card-rec text-center">
         <div class="mb-4">
             <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                <i class="fa-solid fa-lock-open fa-2x"></i>
+                <i class="fa-solid fa-envelope-open-text fa-2x"></i>
             </div>
         </div>
-        <h3 class="mb-2 text-dark">Restablecer Contraseña</h3>
-        <p class="text-muted mb-4 small">Introduce tu correo y define una nueva clave.</p>
+        <h3 class="mb-2 text-dark fw-bold">¿Olvidaste tu contraseña?</h3>
+        <p class="text-muted mb-4 small">Introduce tu correo y te enviaremos un enlace para restablecerla.</p>
         
-        <form id="formReset">
+        <form id="formRecuperar">
             <div class="mb-3 text-start">
                 <label class="form-label fw-bold small">Correo Electrónico</label>
                 <input type="email" class="form-control" id="emailRec" required placeholder="ej: admin@test.com">
             </div>
-            
-            <div class="mb-4 text-start">
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary fw-bold">Enviar Enlace</button>
+                <a href="index.html" class="btn btn-light text-muted">Volver al Login</a>
+            </div>
+        </form>
+
+        <div id="mensaje" class="alert mt-3 d-none text-start small"></div>
+    </div>
+
+    <script>
+        document.getElementById('formRecuperar').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const correo = document.getElementById('emailRec').value;
+            const btn = e.target.querySelector('button');
+            const msgDiv = document.getElementById('mensaje');
+
+            btn.disabled = true;
+            btn.textContent = "Enviando...";
+            msgDiv.classList.add('d-none');
+
+            try {
+                // Llamamos al backend para que envíe el email
+                const response = await fetch('http://localhost:8081/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo: correo })
+                });
+
+                // Mostramos mensaje de éxito
+                msgDiv.textContent = "Si el correo es correcto, recibirás un enlace en breve.";
+                msgDiv.className = 'alert alert-success mt-3 text-start small';
+                msgDiv.classList.remove('d-none');
+                
+            } catch (error) {
+                msgDiv.textContent = "Error de conexión.";
+                msgDiv.className = 'alert alert-danger mt-3 text-start small';
+                msgDiv.classList.remove('d-none');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Enviar Enlace";
+            }
+        });
+    </script>
+</body>
+</html>
+--- restablecer.html ---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Contraseña</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #f0f2f5 0%, #e1e4e8 100%);
+            height: 100vh; display: flex; align-items: center; justify-content: center; 
+        }
+        .card-rec { width: 100%; max-width: 400px; padding: 2rem; border-radius: 15px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="card-rec text-center">
+        <div class="mb-4">
+            <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                <i class="fa-solid fa-key fa-2x"></i>
+            </div>
+        </div>
+        <h3 class="mb-2 text-dark fw-bold">Nueva Contraseña</h3>
+        <p class="text-muted mb-4 small">Por seguridad, introduce tu nueva clave dos veces.</p>
+        
+        <form id="formRestablecer">
+            <div class="mb-3 text-start">
                 <label class="form-label fw-bold small">Nueva Contraseña</label>
                 <div class="input-group">
                     <input type="password" class="form-control" id="newPass" required placeholder="Mínimo 4 caracteres">
-                    <button class="btn btn-outline-secondary" type="button" onclick="togglePass()">
-                        <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePass('newPass', 'icon1')">
+                        <i class="fa-solid fa-eye" id="icon1"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary fw-bold">Actualizar Contraseña</button>
-                <a href="index.html" class="btn btn-light text-muted">Cancelar y Volver</a>
+            <div class="mb-4 text-start">
+                <label class="form-label fw-bold small">Repite la Contraseña</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="confirmPass" required placeholder="Vuelve a escribirla">
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePass('confirmPass', 'icon2')">
+                        <i class="fa-solid fa-eye" id="icon2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary fw-bold">Guardar y Acceder</button>
             </div>
         </form>
 
-        <div id="mensajeExito" class="alert alert-success mt-3 d-none text-start small">
-            <i class="fa-solid fa-check-circle me-1"></i> <strong>¡Éxito!</strong> Contraseña cambiada. Redirigiendo...
-        </div>
-        <div id="mensajeError" class="alert alert-danger mt-3 d-none text-start small"></div>
+        <div id="mensaje" class="alert mt-3 d-none text-start small"></div>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:8081/api/auth/reset-password';
+        // 1. EXTRAER EL TOKEN DE LA URL
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
 
-        document.getElementById('formReset').addEventListener('submit', async (e) => {
+        if (!token) {
+            document.body.innerHTML = '<div class="alert alert-danger m-5">Error: Enlace inválido o incompleto.</div>';
+        }
+
+        // 2. ENVIAR NUEVA CONTRASEÑA
+        document.getElementById('formRestablecer').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const correo = document.getElementById('emailRec').value;
-            const pass = document.getElementById('newPass').value;
+            const pass1 = document.getElementById('newPass').value;
+            const pass2 = document.getElementById('confirmPass').value;
             const btn = e.target.querySelector('button[type="submit"]');
-            const msgExito = document.getElementById('mensajeExito');
-            const msgError = document.getElementById('mensajeError');
+            const msgDiv = document.getElementById('mensaje');
 
-            // Limpiar mensajes previos
-            msgExito.classList.add('d-none');
-            msgError.classList.add('d-none');
+            // --- VALIDACIÓN: ¿COINCIDEN? ---
+            if (pass1 !== pass2) {
+                msgDiv.textContent = "Error: Las contraseñas no coinciden.";
+                msgDiv.className = 'alert alert-danger mt-3 text-start small';
+                msgDiv.classList.remove('d-none');
+                return; // Cortamos aquí, no enviamos nada al servidor
+            }
+
+            // Si coinciden, seguimos...
             btn.disabled = true;
-            btn.textContent = "Verificando...";
+            btn.textContent = "Guardando...";
+            msgDiv.classList.add('d-none');
 
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch('http://localhost:8081/api/auth/reset-password-token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ correo: correo, nuevaPassword: pass })
+                    body: JSON.stringify({ token: token, nuevaPassword: pass1 })
                 });
 
                 if (response.ok) {
-                    // Si el correo existía y se cambió
-                    msgExito.classList.remove('d-none');
-                    btn.textContent = "¡Hecho!";
+                    msgDiv.textContent = "¡Contraseña actualizada! Redirigiendo al login...";
+                    msgDiv.className = 'alert alert-success mt-3 text-start small';
+                    msgDiv.classList.remove('d-none');
                     
-                    // Redirigir al login tras 2 segundos
                     setTimeout(() => {
                         window.location.href = 'index.html';
                     }, 2000);
                 } else {
-                    // Si el correo no existe (400 Bad Request)
-                    const textoError = await response.text();
-                    msgError.textContent = textoError || "Error: Correo no encontrado.";
-                    msgError.classList.remove('d-none');
+                    const texto = await response.text();
+                    msgDiv.textContent = "Error: " + texto;
+                    msgDiv.className = 'alert alert-danger mt-3 text-start small';
+                    msgDiv.classList.remove('d-none');
                     btn.disabled = false;
-                    btn.textContent = "Actualizar Contraseña";
+                    btn.textContent = "Intentar de nuevo";
                 }
             } catch (error) {
                 console.error(error);
-                msgError.textContent = "Error de conexión con el servidor.";
-                msgError.classList.remove('d-none');
+                msgDiv.textContent = "Error de conexión.";
+                msgDiv.className = 'alert alert-danger mt-3 text-start small';
+                msgDiv.classList.remove('d-none');
                 btn.disabled = false;
-                btn.textContent = "Actualizar Contraseña";
+                btn.textContent = "Guardar y Acceder";
             }
         });
 
-        // Función para ver/ocultar contraseña
-        function togglePass() {
-            const input = document.getElementById('newPass');
-            const icon = document.getElementById('eyeIcon');
+        // Función reutilizable para ver/ocultar contraseña
+        function togglePass(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
             if (input.type === "password") {
                 input.type = "text";
                 icon.classList.replace("fa-eye", "fa-eye-slash");
@@ -324,7 +738,7 @@ const usuarioGuardado = sessionStorage.getItem('usuario');
 let usuario = null;
 
 // Variables para los Modales (Popups)
-let modalInfo, modalConfirm, modalEmpresa, modalPrint;
+let modalInfo, modalConfirm, modalEmpresa, modalPrint, modalCrearUser;
 let itemABorrar = { tipo: '', id: 0 };
 
 // =========================================================
@@ -335,22 +749,38 @@ if (!usuarioGuardado) {
 } else {
     usuario = JSON.parse(usuarioGuardado);
     document.addEventListener('DOMContentLoaded', () => {
-        // Poner nombre en el menú lateral
+        // Poner nombre en el menú superior
         const nombreDisplay = document.getElementById('nombreUsuarioDisplay');
         if(nombreDisplay) nombreDisplay.textContent = usuario.nombreCompleto;
         
+        // --- GESTIÓN DE ROLES: OCULTAR ELEMENTOS SOLO-ADMIN ---
+        if (usuario.rol !== 'ADMIN') {
+            document.querySelectorAll('.admin-only').forEach(el => {
+                el.style.display = 'none'; 
+                el.innerHTML = ''; // Vaciar contenido por seguridad
+            });
+        }
+
         // Inicializar Modales de Bootstrap
         modalInfo = new bootstrap.Modal(document.getElementById('infoModal'));
         modalConfirm = new bootstrap.Modal(document.getElementById('confirmModal'));
-        modalEmpresa = new bootstrap.Modal(document.getElementById('empresaModal'));
         modalPrint = new bootstrap.Modal(document.getElementById('printModal'));
-
-        // Listener del botón rojo "Sí, Eliminar" del popup
-        const btnBorrar = document.getElementById('btnConfirmarBorrado');
-        if(btnBorrar) {
-            btnBorrar.addEventListener('click', ejecutarBorrado);
-        }
         
+        // Inicializar modal de empresa si existe (aunque ahora estará en el footer)
+        const elModalEmpresa = document.getElementById('empresaModal');
+        if (elModalEmpresa) modalEmpresa = new bootstrap.Modal(elModalEmpresa);
+        
+        // Inicializar modal de crear usuario
+        const elModalUser = document.getElementById('modalCrearUsuario');
+        if(elModalUser) modalCrearUser = new bootstrap.Modal(elModalUser);
+
+        
+        // Listener formulario crear usuario
+        const formUser = document.getElementById('formCrearUsuario');
+        if(formUser) {
+            formUser.addEventListener('submit', crearUsuarioNuevo);
+        }
+
         // Cargar la primera sección por defecto
         cargarSeccion('mis-seguros');
     });
@@ -363,60 +793,126 @@ async function cargarSeccion(seccion) {
     const contenedor = document.getElementById('contenido-dinamico');
     // Quitar clase 'active' de todos los links
     document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-    
-    // --- MIS SEGUROS ---
+
+    // --- SECCIÓN: MIS SEGUROS (Lógica Centralizada) ---
     if (seccion === 'mis-seguros') {
-        renderizarCargando(contenedor, 'Cargando tus pólizas...');
+        const titulo = usuario.rol === 'ADMIN' ? 'Gestión Global de Pólizas' : 'Mis Pólizas Contratadas';
+        renderizarCargando(contenedor, 'Cargando pólizas...');
         try {
-            const res = await fetch(`${API_URL}/seguros/usuario/${usuario.idUsuario}`);
-            const seguros = await res.json();
-            renderizarSeguros(seguros, contenedor);
+            // LOGICA CAMBIADA:
+            // Admin -> Pide TODOS los seguros (/api/seguros)
+            // User -> Pide SUS seguros (/api/seguros/usuario/ID)
+            let endpoint = '';
+            if (usuario.rol === 'ADMIN') {
+                endpoint = `${API_URL}/seguros`; // Asumiendo que has creado este endpoint global en Java
+            } else {
+                endpoint = `${API_URL}/seguros/usuario/${usuario.idUsuario}`;
+            }
+
+            const res = await fetch(endpoint, { credentials: 'include' });
+            
+            // Si falla el endpoint global (404), fallback al del usuario para que no rompa
+            if (!res.ok && usuario.rol === 'ADMIN') {
+                const resB = await fetch(`${API_URL}/seguros/usuario/${usuario.idUsuario}`, { credentials: 'include' });
+                const segurosB = await resB.json();
+                renderizarSeguros(segurosB, contenedor, titulo);
+            } else if (res.ok) {
+                const seguros = await res.json();
+                renderizarSeguros(seguros, contenedor, titulo);
+            } else {
+                throw new Error("Error al cargar seguros");
+            }
         } catch (e) { mostrarError(contenedor); }
 
-    // --- FACTURAS ---
+ // --- SECCIÓN: FACTURAS ---
     } else if (seccion === 'facturas') {
+        const titulo = usuario.rol === 'ADMIN' ? 'Control de Facturación Global' : 'Mis Facturas';
         renderizarCargando(contenedor, 'Cargando facturas...');
+        
         try {
-            const res = await fetch(`${API_URL}/facturas/usuario/${usuario.idUsuario}`);
-            const facturas = await res.json();
-            renderizarFacturas(facturas, contenedor);
+            // LÓGICA INTELIGENTE:
+            // Si es ADMIN -> Trae TODAS (/api/facturas)
+            // Si es USER  -> Trae SOLO LAS SUYAS (/api/facturas/usuario/ID)
+            const endpoint = usuario.rol === 'ADMIN' 
+                ? `${API_URL}/facturas` 
+                : `${API_URL}/facturas/usuario/${usuario.idUsuario}`;
+
+            const res = await fetch(endpoint, { credentials: 'include' });
+            
+            if (res.ok) {
+                const facturas = await res.json();
+                renderizarFacturas(facturas, contenedor, titulo);
+            } else {
+                mostrarError(contenedor);
+            }
         } catch (e) { mostrarError(contenedor); }
 
-    // --- SINIESTROS ---
+  // --- SECCIÓN: SINIESTROS ---
     } else if (seccion === 'siniestros') {
-        renderizarCargando(contenedor, 'Cargando gestión de siniestros...');
+        const titulo = usuario.rol === 'ADMIN' ? 'Gestión de Siniestros (Todos)' : 'Mis Siniestros';
+        renderizarCargando(contenedor, 'Cargando siniestros...');
+        
         try {
-            const resSin = await fetch(`${API_URL}/siniestros/usuario/${usuario.idUsuario}`);
+            // 1. Obtener la lista de siniestros (Todos o Míos)
+            const endpointSin = usuario.rol === 'ADMIN' 
+                ? `${API_URL}/siniestros` 
+                : `${API_URL}/siniestros/usuario/${usuario.idUsuario}`;
+            
+            const resSin = await fetch(endpointSin, { credentials: 'include' });
             const listaSiniestros = await resSin.json();
             
-            const resSeg = await fetch(`${API_URL}/seguros/usuario/${usuario.idUsuario}`);
+            // 2. Obtener lista de seguros (necesario para el desplegable de "Nuevo Siniestro")
+            // (El Admin necesita ver TODOS los seguros para poder abrir partes en nombre de otros si quisiera, 
+            // o al menos sus propios seguros para pruebas).
+            const endpointSeg = usuario.rol === 'ADMIN' 
+                ? `${API_URL}/seguros`
+                : `${API_URL}/seguros/usuario/${usuario.idUsuario}`;
+
+            const resSeg = await fetch(endpointSeg, { credentials: 'include' });
             const listaSeguros = await resSeg.json();
 
-            renderizarSiniestros(listaSiniestros, listaSeguros, contenedor);
+            renderizarSiniestros(listaSiniestros, listaSeguros, contenedor, titulo);
+
         } catch (e) { mostrarError(contenedor); }
 
-    // --- AÑADIR SEGURO ---
-    } else if (seccion === 'anadir-seguro') {
-        renderizarCargando(contenedor, 'Cargando tipos...');
+    // --- SECCIÓN: USUARIOS (NUEVA) ---
+    } else if (seccion === 'usuarios') {
+        renderizarCargando(contenedor, 'Cargando directorio de usuarios...');
         try {
-            const res = await fetch(`${API_URL}/tipos-seguro`);
-            const tipos = await res.json();
-            renderizarFormularioAlta(tipos, contenedor);
+            const res = await fetch(`${API_URL}/usuarios`, { credentials: 'include' });
+            if(res.ok) {
+                const lista = await res.json();
+                renderizarUsuarios(lista, contenedor);
+            } else {
+                contenedor.innerHTML = '<div class="alert alert-warning">No se pudo cargar la lista de usuarios.</div>';
+            }
+        } catch (e) { mostrarError(contenedor); }
+
+    // --- SECCIÓN: AÑADIR SEGURO (SOLO ADMIN) ---
+    } else if (seccion === 'anadir-seguro') {
+        renderizarCargando(contenedor, 'Cargando datos del formulario...');
+        try {
+            // 1. Cargar tipos de seguro
+            const resTipos = await fetch(`${API_URL}/tipos-seguro`, { credentials: 'include' });
+            const tipos = await resTipos.json();
+
+            // 2. Cargar lista de usuarios (Para asignar el seguro)
+            const resUsers = await fetch(`${API_URL}/usuarios`, { credentials: 'include' });
+            const usuariosLista = await resUsers.json();
+
+            renderizarFormularioAlta(tipos, usuariosLista, contenedor);
         } catch (e) { mostrarError(contenedor); }
     
-    // --- PERFIL ---
+    // --- SECCIONES ESTÁNDAR (RESTAURADAS) ---
     } else if (seccion === 'perfil') {
         renderizarPerfil(contenedor);
-    
-    // --- AYUDA ---
+
     } else if (seccion === 'ayuda') {
         renderizarAyuda(contenedor);
-    
-    // --- CONFIGURACIÓN ---
+
     } else if (seccion === 'config') {
         renderizarConfiguracion(contenedor);
 
-    // --- PRIVACIDAD ---
     } else if (seccion === 'privacidad') {
         renderizarPrivacidad(contenedor);
     }
@@ -426,35 +922,60 @@ async function cargarSeccion(seccion) {
 // 4. RENDERIZADORES (VISTAS)
 // =========================================================
 
-// --- VISTA SEGUROS ---
-function renderizarSeguros(lista, contenedor) {
-    if (lista.length === 0) { contenedor.innerHTML = '<div class="alert alert-info shadow-sm">No tienes seguros contratados.</div>'; return; }
+// --- VISTA SEGUROS (ADAPTADA ADMIN/USER) ---
+function renderizarSeguros(lista, contenedor, titulo) {
+    if (lista.length === 0) { 
+        contenedor.innerHTML = `<h3 class="mb-4">${titulo}</h3><div class="alert alert-info shadow-sm">No hay pólizas registradas.</div>`; 
+        return; 
+    }
     
-    let html = '<h3 class="mb-4">Mis Pólizas Activas</h3><div class="row">';
+    let html = `<h3 class="mb-4">${titulo}</h3><div class="row">`;
     lista.forEach(seguro => {
         let icono = '🛡️';
-        const n = seguro.tipoSeguro.nombre.toLowerCase();
+        // Protección contra null en tipoSeguro
+        const nombreTipo = seguro.tipoSeguro ? seguro.tipoSeguro.nombre : 'Póliza Genérica';
+        const n = nombreTipo.toLowerCase();
+        
         if(n.includes('coche')) icono = '🚗';
         else if(n.includes('moto')) icono = '🏍️';
         else if(n.includes('hogar')) icono = '🏠';
         else if(n.includes('vida') || n.includes('salud')) icono = '❤️';
+
+        // LÓGICA DE VISUALIZACIÓN SEGÚN ROL
+        let extraInfo = '';
+        let botonBorrar = '';
+
+        if (usuario.rol === 'ADMIN') {
+            // El Admin ve quién es el dueño y botón de borrar
+            const clienteNombre = seguro.usuario ? seguro.usuario.nombreCompleto : 'Sin Asignar';
+            const clienteEmail = seguro.usuario ? seguro.usuario.correo : '';
+            
+            extraInfo = `
+            <div class="mt-2 pt-2 border-top small text-muted bg-light p-2 rounded">
+                <i class="fa-solid fa-user me-1"></i> <strong>Cliente:</strong> ${clienteNombre}<br>
+                <i class="fa-solid fa-envelope me-1"></i> ${clienteEmail}
+            </div>`;
+
+            botonBorrar = `
+            <button class="btn btn-outline-danger btn-sm" onclick="solicitarBorrado('seguros', ${seguro.idSeguro})">
+                <i class="fa-solid fa-trash"></i> Eliminar
+            </button>`;
+        }
 
         html += `
         <div class="col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold mb-0 text-primary">${icono} ${seguro.tipoSeguro.nombre}</h5>
+                        <h5 class="fw-bold mb-0 text-primary">${icono} ${nombreTipo}</h5>
                         <span class="badge bg-success">ACTIVO</span>
                     </div>
                     <p class="text-muted small"><strong>PÓLIZA:</strong> ${seguro.numPoliza}</p>
                     <p class="bg-light p-2 rounded small border">${seguro.datosEspecificos}</p>
-                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                    
+                    ${extraInfo} <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
                         <span class="fw-bold fs-5">${seguro.primaAnual} €/año</span>
-                        <button class="btn btn-outline-danger btn-sm" onclick="solicitarBorrado('seguros', ${seguro.idSeguro})">
-                            <i class="fa-solid fa-trash"></i> Eliminar
-                        </button>
-                    </div>
+                        ${botonBorrar} </div>
                 </div>
             </div>
         </div>`;
@@ -463,24 +984,129 @@ function renderizarSeguros(lista, contenedor) {
     contenedor.innerHTML = html;
 }
 
-// --- VISTA FACTURAS ---
-function renderizarFacturas(lista, contenedor) {
-    if (lista.length === 0) { contenedor.innerHTML = '<div class="alert alert-info shadow-sm">No tienes facturas.</div>'; return; }
+// --- VISTA USUARIOS (NUEVA) ---
+function renderizarUsuarios(lista, contenedor) {
+    let botonCrear = '';
+    let headerAcciones = '';
     
+    // Solo Admin puede crear
+    if (usuario.rol === 'ADMIN') {
+        botonCrear = `
+        <div class="mb-3 text-end">
+            <button class="btn btn-success shadow-sm" onclick="modalCrearUser.show()">
+                <i class="fa-solid fa-user-plus me-2"></i> Nuevo Usuario
+            </button>
+        </div>`;
+        headerAcciones = '<th class="text-end pe-4">Acciones</th>';
+    }
+
     let html = `
-    <h3 class="mb-4">Mis Facturas</h3>
-    <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-    <thead class="table-light"><tr><th class="ps-4">Concepto</th><th>Fecha</th><th>Importe</th><th class="text-end pe-4">Acciones</th></tr></thead><tbody>`;
+    <h3 class="mb-4">Directorio de Usuarios</h3>
+    ${botonCrear}
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Nombre Completo</th>
+                        <th>Correo Electrónico</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        ${headerAcciones}
+                    </tr>
+                </thead>
+                <tbody>`;
+
+    lista.forEach(u => {
+        let badgeRol = u.rol === 'ADMIN' ? 'bg-danger' : 'bg-primary';
+        let badgeEstado = u.activo ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>';
+        
+        let colAcciones = '';
+        if (usuario.rol === 'ADMIN') {
+            // Admin no se borra a sí mismo
+            if (u.idUsuario !== usuario.idUsuario) {
+                colAcciones = `
+                <td class="text-end pe-4">
+                    <button class="btn btn-sm btn-outline-danger" onclick="solicitarBorrado('usuarios', ${u.idUsuario})" title="Eliminar Usuario">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>`;
+            } else {
+                colAcciones = '<td class="text-end pe-4"><span class="text-muted small fst-italic">Tu cuenta</span></td>';
+            }
+        }
+
+        html += `
+        <tr>
+            <td class="ps-4 fw-bold">${u.nombreCompleto}</td>
+            <td>${u.correo}</td>
+            <td><span class="badge ${badgeRol}">${u.rol}</span></td>
+            <td>${badgeEstado}</td>
+            ${colAcciones}
+        </tr>`;
+    });
+
+    html += '</tbody></table></div></div>';
+    contenedor.innerHTML = html;
+}
+
+// --- VISTA FACTURAS (VERSIÓN FINAL) ---
+function renderizarFacturas(lista, contenedor, titulo) {
+    const tituloMostrar = titulo || 'Mis Facturas';
+    
+    if (!lista || lista.length === 0) { 
+        contenedor.innerHTML = `<h3 class="mb-4">${tituloMostrar}</h3><div class="alert alert-info shadow-sm">No hay facturas disponibles.</div>`;
+        return; 
+    }
+    
+    const thCliente = usuario.rol === 'ADMIN' ? '<th class="ps-3">Cliente</th>' : '';
+
+    let html = `
+    <h3 class="mb-4">${tituloMostrar}</h3>
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Concepto</th>
+                        ${thCliente} 
+                        <th>Fecha</th>
+                        <th>Importe</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+    
     lista.forEach(f => {
+        // EXTRACCIÓN DIRECTA DEL ID
+        // Usamos idFactura porque es el que viene en tu base de datos
+        const elId = f.idFactura; 
+        
         const jsonF = JSON.stringify(f).replace(/"/g, '&quot;');
+        
+        let tdCliente = '';
+        if (usuario.rol === 'ADMIN') {
+            const nombre = (f.usuario && f.usuario.nombreCompleto) ? f.usuario.nombreCompleto : 'Desconocido';
+            const email = (f.usuario && f.usuario.correo) ? f.usuario.correo : '-';
+            tdCliente = `<td class="ps-3"><small class="fw-bold">${nombre}</small><br><small class="text-muted">${email}</small></td>`;
+        }
+
+        // Dentro de renderizarFacturas...
+        let btnBorrar = '';
+        if (usuario.rol === 'ADMIN') {
+        // CAMBIO: Llamamos a solicitarBorrado_V2
+         btnBorrar = `<button class="btn btn-sm btn-outline-danger ms-1" onclick="solicitarBorrado_V2('facturas', ${idReal})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>`;
+}
+
         html += `
         <tr>
             <td class="ps-4 fw-bold">${f.concepto}</td>
+            ${tdCliente}
             <td>${f.fechaEmision}</td>
-            <td class="fw-bold">${f.importe} €</td>
+            <td class="fw-bold text-primary">${f.importe} €</td>
             <td class="text-end pe-4">
-                <button class="btn btn-sm btn-primary me-1" onclick="prepararFactura(${jsonF})"><i class="fa-solid fa-print"></i></button>
-                <button class="btn btn-sm btn-outline-danger" onclick="solicitarBorrado('facturas', ${f.idFactura})"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn btn-sm btn-primary" onclick="prepararFactura(${jsonF})" title="Imprimir"><i class="fa-solid fa-print"></i></button>
+                ${btnBorrar}
             </td>
         </tr>`;
     });
@@ -488,32 +1114,47 @@ function renderizarFacturas(lista, contenedor) {
     contenedor.innerHTML = html;
 }
 
-// --- VISTA SINIESTROS ---
-function renderizarSiniestros(siniestros, seguros, contenedor) {
+// --- VISTA SINIESTROS (MEJORADA) ---
+function renderizarSiniestros(siniestros, seguros, contenedor, titulo) {
+    const tituloMostrar = titulo || 'Gestión de Siniestros';
+    
+    // Preparar el desplegable para nuevo siniestro
     let opcionesSeguro = '<option value="" disabled selected>-- Seleccione Seguro --</option>';
     if (seguros.length > 0) {
-        seguros.forEach(s => opcionesSeguro += `<option value="${s.idSeguro}">${s.tipoSeguro.nombre} - ${s.numPoliza}</option>`);
+        seguros.forEach(s => {
+            // Si es Admin, mostramos también el dueño del seguro en el desplegable
+            const extra = usuario.rol === 'ADMIN' && s.usuario ? ` (${s.usuario.nombreCompleto})` : '';
+            opcionesSeguro += `<option value="${s.idSeguro}">${s.tipoSeguro.nombre} - ${s.numPoliza}${extra}</option>`;
+        });
     } else {
-        opcionesSeguro = '<option disabled>No tienes seguros contratados</option>';
+        opcionesSeguro = '<option disabled>No hay seguros disponibles</option>';
     }
 
     let listaHTML = '';
     if (siniestros.length === 0) {
-        listaHTML = '<div class="alert alert-success">No tienes siniestros reportados.</div>';
+        listaHTML = '<div class="alert alert-success">No hay siniestros registrados.</div>';
     } else {
         siniestros.forEach(s => {
             let color = s.estado === 'ABIERTO' ? 'warning' : 'success';
+            
+           
+          // Dentro de renderizarSiniestros...
+            let btnBorrar = '';
+            if (usuario.rol === 'ADMIN') {
+           // CAMBIO: Llamamos a solicitarBorrado_V2
+          btnBorrar = `<button class="btn btn-sm btn-outline-danger ms-1" onclick="solicitarBorrado_V2('siniestros', ${idReal})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>`;
+}
+
             listaHTML += `
             <div class="card mb-3 border-${color} border-start border-3 shadow-sm">
                 <div class="card-body">
+                    ${infoCliente}
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="fw-bold mb-0">Póliza: ${s.seguro ? s.seguro.numPoliza : '???'}</h6>
                             <span class="badge bg-${color} mt-1">${s.estado}</span>
                         </div>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="solicitarBorrado('siniestros', ${s.idSiniestro})" title="Eliminar Siniestro">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
+                        ${btnBorrar}
                     </div>
                     <hr class="my-2">
                     <p class="mb-1 small text-muted"><i class="fa-solid fa-calendar-day me-1"></i> ${s.fechaSuceso}</p>
@@ -525,53 +1166,95 @@ function renderizarSiniestros(siniestros, seguros, contenedor) {
     }
 
     contenedor.innerHTML = `
-    <h3 class="mb-4">Gestión de Siniestros</h3>
+    <h3 class="mb-4">${tituloMostrar}</h3>
     <div class="row">
         <div class="col-md-5 mb-4">
             <div class="card shadow border-0">
-                <div class="card-header bg-danger text-white fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i> Reportar Incidencia</div>
+                <div class="card-header bg-danger text-white fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i> Reportar Nuevo Siniestro</div>
                 <div class="card-body">
                     <form id="formSiniestro">
-                        <div class="mb-3"><label class="fw-bold">Seguro</label><select id="sinSeguro" class="form-select" required>${opcionesSeguro}</select></div>
-                        <div class="mb-3"><label class="fw-bold">Descripción</label><textarea id="sinDesc" class="form-control" rows="4" required placeholder="Describe lo ocurrido..."></textarea></div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Póliza Afectada</label>
+                            <select id="sinSeguro" class="form-select" required>${opcionesSeguro}</select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Descripción del incidente</label>
+                            <textarea id="sinDesc" class="form-control" rows="4" required placeholder="Describe detalladamente qué ha ocurrido..."></textarea>
+                        </div>
                         <div class="d-grid"><button type="submit" class="btn btn-danger">Enviar Parte</button></div>
                     </form>
                 </div>
             </div>
         </div>
-        <div class="col-md-7"><h5 class="text-muted">Historial</h5><div style="max-height: 500px; overflow-y: auto;">${listaHTML}</div></div>
+        <div class="col-md-7">
+            <h5 class="text-muted mb-3">Historial de Incidencias</h5>
+            <div style="max-height: 600px; overflow-y: auto; padding-right: 5px;">
+                ${listaHTML}
+            </div>
+        </div>
     </div>`;
 
+    // Re-activar el listener del formulario
     document.getElementById('formSiniestro').addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
             const res = await fetch(`${API_URL}/siniestros`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ descripcion: document.getElementById('sinDesc').value, seguro: { idSeguro: document.getElementById('sinSeguro').value } })
+                credentials: 'include',
+                body: JSON.stringify({ 
+                    descripcion: document.getElementById('sinDesc').value, 
+                    seguro: { idSeguro: document.getElementById('sinSeguro').value } 
+                })
             });
-            if (res.ok) { mostrarPopup("Siniestro reportado."); cargarSeccion('siniestros'); }
+            if (res.ok) { 
+                mostrarPopup("Siniestro reportado correctamente."); 
+                cargarSeccion('siniestros'); // Recargar para ver el nuevo
+            }
             else mostrarPopup("Error al reportar.");
         } catch (error) { mostrarPopup("Error conexión."); }
     });
 }
 
-// --- VISTA FORMULARIO ALTA SEGURO ---
-function renderizarFormularioAlta(tipos, contenedor) {
-    let opts = `<option value="" disabled selected>-- Seleccione Tipo --</option>`;
-    tipos.forEach(t => opts += `<option value="${t.idTipo}">${t.nombre} (${t.precioBase}€)</option>`);
+// --- VISTA FORMULARIO ALTA SEGURO (MODIFICADO PARA ADMIN) ---
+function renderizarFormularioAlta(tipos, listaUsuarios, contenedor) {
+    let optsTipos = `<option value="" disabled selected>-- Seleccione Tipo --</option>`;
+    tipos.forEach(t => optsTipos += `<option value="${t.idTipo}">${t.nombre} (${t.precioBase}€)</option>`);
+
+    // Selector de Usuarios (Solo lo usa el Admin)
+    let optsUsuarios = `<option value="" disabled selected>-- Seleccione Cliente --</option>`;
+    listaUsuarios.forEach(u => {
+        const rol = u.rol === 'ADMIN' ? '(Admin)' : '(Cliente)';
+        optsUsuarios += `<option value="${u.idUsuario}">${u.nombreCompleto} - ${u.correo} ${rol}</option>`;
+    });
+
     const poliza = 'POL-' + Math.floor(Math.random()*99999);
+    
     contenedor.innerHTML = `
-    <h3 class="mb-4">Contratar Nuevo Seguro</h3>
+    <h3 class="mb-4">Contratar Nuevo Seguro (Administración)</h3>
+    <div class="alert alert-primary small"><i class="fa-solid fa-info-circle me-2"></i> Como administrador, estás creando una póliza en nombre de un cliente.</div>
+    
     <div class="card shadow-sm border-0" style="max-width: 700px;"><div class="card-body p-4">
     <form id="formAlta">
-        <div class="row mb-3"><div class="col"><label class="fw-bold">Tipo</label><select id="idTipo" class="form-select" required>${opts}</select></div>
-        <div class="col"><label class="fw-bold">Póliza</label><input id="numPoliza" class="form-control bg-light" value="${poliza}" readonly></div></div>
-        <div class="row mb-3"><div class="col"><label>Inicio</label><input type="date" id="fInicio" class="form-control" required></div>
-        <div class="col"><label>Renovación</label><input type="date" id="fRenov" class="form-control" required></div></div>
+        <div class="mb-3">
+            <label class="fw-bold text-primary">Asignar a Cliente</label>
+            <select id="idClienteAsignado" class="form-select border-primary" required>
+                ${optsUsuarios}
+            </select>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col"><label class="fw-bold">Tipo</label><select id="idTipo" class="form-select" required>${optsTipos}</select></div>
+            <div class="col"><label class="fw-bold">Póliza</label><input id="numPoliza" class="form-control bg-light" value="${poliza}" readonly></div>
+        </div>
+        <div class="row mb-3">
+            <div class="col"><label>Inicio</label><input type="date" id="fInicio" class="form-control" required></div>
+            <div class="col"><label>Renovación</label><input type="date" id="fRenov" class="form-control" required></div>
+        </div>
         <div class="mb-3"><label class="fw-bold">Detalles</label><textarea id="detalles" class="form-control" required></textarea></div>
         <div class="mb-3"><label class="fw-bold">Precio (€)</label><input type="number" id="precio" class="form-control" required></div>
-        <button type="submit" class="btn btn-primary w-100">Contratar</button>
+        
+        <button type="submit" class="btn btn-primary w-100">Crear y Asignar Póliza</button>
     </form></div></div>`;
     
     const iIni = document.getElementById('fInicio');
@@ -587,38 +1270,83 @@ function renderizarFormularioAlta(tipos, contenedor) {
 
     document.getElementById('formAlta').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const d = { numPoliza: document.getElementById('numPoliza').value, fechaInicio: document.getElementById('fInicio').value, fechaRenovacion: document.getElementById('fRenov').value, primaAnual: parseFloat(document.getElementById('precio').value), datosEspecificos: document.getElementById('detalles').value, estado: "ACTIVO", usuario: { idUsuario: usuario.idUsuario }, tipoSeguro: { idTipo: document.getElementById('idTipo').value } };
-        try { const r = await fetch(`${API_URL}/seguros`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d)}); if(r.ok){ mostrarPopup("¡Contratado! Factura generada."); cargarSeccion('mis-seguros'); } else mostrarPopup("Error al guardar."); } catch(e){ mostrarPopup("Error conexión."); }
+        
+        // Obtenemos el ID del usuario seleccionado en el Select
+        const idCliente = document.getElementById('idClienteAsignado').value;
+
+        const d = { 
+            numPoliza: document.getElementById('numPoliza').value, 
+            fechaInicio: document.getElementById('fInicio').value, 
+            fechaRenovacion: document.getElementById('fRenov').value, 
+            primaAnual: parseFloat(document.getElementById('precio').value), 
+            datosEspecificos: document.getElementById('detalles').value, 
+            estado: "ACTIVO", 
+            usuario: { idUsuario: idCliente }, // ASIGNACIÓN AL CLIENTE SELECCIONADO
+            tipoSeguro: { idTipo: document.getElementById('idTipo').value } 
+        };
+        try { 
+            const r = await fetch(`${API_URL}/seguros`, { 
+                method:'POST', 
+                headers:{'Content-Type':'application/json'}, 
+                credentials: 'include',
+                body:JSON.stringify(d)
+            }); 
+            if(r.ok){ mostrarPopup("¡Póliza creada y asignada!"); cargarSeccion('mis-seguros'); } else mostrarPopup("Error al guardar."); 
+        } catch(e){ mostrarPopup("Error conexión."); }
     });
 }
 
-// --- VISTA CONFIGURACIÓN ---
+// --- VISTA CONFIGURACIÓN (RESTAURADA COMPLETA) ---
 function renderizarConfiguracion(contenedor) {
+    // A. Si está ACTIVADO: Mostramos botón rojo para quitarlo
+    if (usuario.twoFactorEnabled) {
+        botonHtml = `
+            <div class="alert alert-success mb-3">
+                <i class="fa-solid fa-check-circle me-2"></i> Tu cuenta está protegida con doble factor.
+            </div>
+            <button class="btn btn-outline-danger w-100 shadow-sm" onclick="desactivar2FA()">
+                <i class="fa-solid fa-user-shield me-2"></i> Desactivar 2FA
+            </button>`;
+        estadoBadge = '<span class="badge bg-success fs-6 px-3 py-2">ACTIVADO</span>';
+    } 
+    // B. Si está DESACTIVADO: Mostramos botón azul para ponerlo
+    else {
+        botonHtml = `
+            <button class="btn btn-primary btn-lg w-100 mt-3 shadow-sm" onclick="iniciarSetup2FA()">
+                <i class="fa-solid fa-qrcode me-2"></i> Configurar y Activar 2FA
+            </button>`;
+        estadoBadge = '<span class="badge bg-secondary fs-6 px-3 py-2">DESACTIVADO</span>';
+    }
+
+    // Renderizamos la tarjeta
     contenedor.innerHTML = `
-    <h3 class="mb-4">Configuración</h3>
-    <div class="row"><div class="col-md-6 mb-4"><div class="card shadow-sm border-0 h-100"><div class="card-header bg-white fw-bold"><i class="fa-solid fa-lock text-warning me-2"></i>Seguridad</div><div class="card-body">
-    <form id="formCambiarPass">
-        <div class="mb-3"><label class="text-muted small">Contraseña Actual</label><input type="password" id="oldPass" class="form-control" required></div>
-        <div class="mb-3"><label class="text-muted small">Nueva Contraseña</label><input type="password" id="newPass" class="form-control" required></div>
-        <button type="submit" class="btn btn-warning w-100 fw-bold">Actualizar</button>
-    </form></div></div></div>
-    <div class="col-md-6 mb-4"><div class="card shadow-sm border-0 h-100"><div class="card-header bg-white fw-bold"><i class="fa-solid fa-sliders text-primary me-2"></i>Preferencias</div><div class="card-body">
-        <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" checked><label>Notificaciones Email</label></div>
-        <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox"><label>Notificaciones SMS</label></div>
-        <hr><button class="btn btn-primary w-100" onclick="mostrarPopup('Preferencias guardadas.')">Guardar</button>
-    </div></div></div></div>`;
+    <h3 class="mb-4">Configuración de Cuenta</h3>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white p-3 border-bottom">
+                    <h5 class="fw-bold text-primary mb-0"><i class="fa-solid fa-shield-halved me-2"></i> Seguridad Avanzada</h5>
+                </div>
+                <div class="card-body p-5 text-center">
+                    <i class="fa-solid fa-mobile-screen-button text-primary fa-4x mb-4"></i>
+                    <h4 class="fw-bold mb-3">Autenticación en Dos Pasos (2FA)</h4>
+                    <p class="text-muted mb-4">
+                        Protege el inicio de sesión solicitando un código adicional desde tu móvil.
+                    </p>
+                    
+                    <div class="d-inline-block bg-light p-3 rounded border mb-3">
+                        <strong>Estado actual:</strong> ${estadoBadge}
+                    </div>
 
-    document.getElementById('formCambiarPass').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try {
-            const res = await fetch(`${API_URL}/usuarios/${usuario.idUsuario}/cambiar-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ oldPassword: document.getElementById('oldPass').value, newPassword: document.getElementById('newPass').value }) });
-            if (res.ok) { mostrarPopup("Contraseña actualizada."); e.target.reset(); }
-            else { const t = await res.text(); mostrarPopup("Error: " + t); }
-        } catch (error) { mostrarPopup("Error conexión."); }
-    });
+                    <div class="mt-2">
+                        ${botonHtml}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
 }
-
-// --- VISTA PERFIL ---
+// --- VISTA PERFIL (RESTAURADA COMPLETA) ---
 function renderizarPerfil(c) {
     c.innerHTML = `<h3 class="mb-4">Mi Perfil</h3><div class="card shadow-sm border-0" style="max-width:600px;"><div class="card-body p-4"><form id="formPerfil">
     <div class="mb-3"><label class="fw-bold">Nombre</label><input type="text" id="pN" class="form-control" value="${usuario.nombreCompleto}"></div>
@@ -626,16 +1354,27 @@ function renderizarPerfil(c) {
     <div class="mb-3"><label class="fw-bold">Móvil</label><input type="text" id="pM" class="form-control" value="${usuario.movil||''}"></div>
     <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
     </form></div></div>`;
+    
     document.getElementById('formPerfil').addEventListener('submit', async(e)=>{
         e.preventDefault();
         try {
-            const res = await fetch(`${API_URL}/usuarios/${usuario.idUsuario}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({...usuario, nombreCompleto:document.getElementById('pN').value, movil:document.getElementById('pM').value})});
-            if(res.ok){ usuario=await res.json(); sessionStorage.setItem('usuario',JSON.stringify(usuario)); document.getElementById('nombreUsuarioDisplay').textContent=usuario.nombreCompleto; mostrarPopup("Perfil actualizado."); }
+            const res = await fetch(`${API_URL}/usuarios/${usuario.idUsuario}`, { 
+                method:'PUT', 
+                headers:{'Content-Type':'application/json'}, 
+                credentials: 'include',
+                body:JSON.stringify({...usuario, nombreCompleto:document.getElementById('pN').value, movil:document.getElementById('pM').value})
+            });
+            if(res.ok){ 
+                usuario=await res.json(); 
+                sessionStorage.setItem('usuario',JSON.stringify(usuario)); 
+                document.getElementById('nombreUsuarioDisplay').textContent=usuario.nombreCompleto; 
+                mostrarPopup("Perfil actualizado."); 
+            }
         } catch(e){mostrarPopup("Error.");}
     });
 }
 
-// --- VISTA AYUDA ---
+// --- VISTA AYUDA (RESTAURADA COMPLETA) ---
 function renderizarAyuda(contenedor) {
     contenedor.innerHTML = `
     <h3 class="mb-4">Centro de Ayuda y Soporte</h3>
@@ -675,12 +1414,17 @@ function renderizarAyuda(contenedor) {
                                 <div class="accordion-body text-muted small">Ve a la sección Facturas y pulsa el botón azul.</div>
                             </div>
                         </div>
+                        <div class="accordion-item mb-2 border-0 shadow-sm">
+                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q3">¿Dónde veo la información de la empresa?</button></h2>
+                            <div id="q3" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
+                                <div class="accordion-body text-muted small">Haz clic en el botón 'Info Empresa' en el menú lateral.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>`;
-
     document.getElementById('formAyuda').addEventListener('submit', (e) => {
         e.preventDefault();
         mostrarPopup("Mensaje enviado. Contactaremos contigo pronto.");
@@ -688,7 +1432,7 @@ function renderizarAyuda(contenedor) {
     });
 }
 
-// --- VISTA PRIVACIDAD ---
+// --- VISTA PRIVACIDAD (RESTAURADA COMPLETA) ---
 function renderizarPrivacidad(contenedor) {
     const year = new Date().getFullYear();
     contenedor.innerHTML = `
@@ -755,34 +1499,124 @@ function renderizarPrivacidad(contenedor) {
 }
 
 // =========================================================
-// 5. FUNCIONES DE SISTEMA (BORRAR, IMPRIMIR)
+// 5. FUNCIONES DE SISTEMA (BORRAR, IMPRIMIR, CREAR)
 // =========================================================
 
-function solicitarBorrado(tipo, id) {
-    itemABorrar = { tipo, id };
-    modalConfirm.show();
+// =========================================================
+// 7. LÓGICA DE BORRADO V2 (Renombrada para evitar caché)
+// =========================================================
+let modalBorrado;      
+// Nombres nuevos para evitar conflictos
+var borrado_V2_Tipo = "";
+var borrado_V2_Id = 0;
+
+// A. Función llamada al hacer clic en la papelera
+function solicitarBorrado_V2(tipoTexto, idNumero) {
+    console.log("--> FASE 1: Click recibido V2. Tipo:", tipoTexto, "ID:", idNumero);
+
+    // Validación inmediata
+    if (!tipoTexto || !idNumero || idNumero === 0) {
+        alert("Error: Datos incorrectos (ID es 0 o Tipo vacío).");
+        return;
+    }
+
+    // Guardamos en las variables NUEVAS
+    borrado_V2_Tipo = tipoTexto;
+    borrado_V2_Id = idNumero;
+    
+    // Abrimos el modal
+    if (!modalBorrado) modalBorrado = new bootstrap.Modal(document.getElementById('modalBorrado'));
+    
+    // Reseteamos el input
+    const input = document.getElementById('inputBorradoConfirm');
+    const btn = document.getElementById('btnBorrarFinal');
+    
+    if(input) {
+        input.value = "";
+        setTimeout(() => input.focus(), 500);
+    }
+    if(btn) btn.disabled = true;
+    
+    modalBorrado.show();
 }
 
-async function ejecutarBorrado() {
-    modalConfirm.hide();
+// B. Verificar texto
+function verificarTextoBorrado_V2() {
+    const texto = document.getElementById('inputBorradoConfirm').value;
+    const btn = document.getElementById('btnBorrarFinal');
+    if(btn) btn.disabled = (texto !== "ELIMINAR");
+}
+
+// C. Ejecutar el borrado real
+async function ejecutarBorrado_V2() {
+    // Recuperamos de las variables NUEVAS
+    const tipo = borrado_V2_Tipo;
+    const id = borrado_V2_Id;
+    
+    console.log("--> FASE 2: Ejecutando borrado V2 para:", tipo, id);
+
+    // ESCUDO DE SEGURIDAD
+    if (!tipo || id === 0) {
+        alert("¡ALTO! Las variables se han perdido. Intenta recargar la página (F5).");
+        if(modalBorrado) modalBorrado.hide();
+        return;
+    }
+
+    const urlBorrado = API_URL + "/" + tipo + "/" + id;
+    const btn = document.getElementById('btnBorrarFinal');
+    if(btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
     try {
-        const res = await fetch(`${API_URL}/${itemABorrar.tipo}/${itemABorrar.id}`, { method: 'DELETE' });
-        
+        const res = await fetch(urlBorrado, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
         if (res.ok) {
-            mostrarPopup("Eliminado correctamente.");
-            // Refrescar la lista correcta
-            if (itemABorrar.tipo === 'seguros') cargarSeccion('mis-seguros');
-            else if (itemABorrar.tipo === 'facturas') cargarSeccion('facturas');
-            else if (itemABorrar.tipo === 'siniestros') cargarSeccion('siniestros');
+            if(modalBorrado) modalBorrado.hide();
+            mostrarPopup("Registro eliminado correctamente.");
+            cargarSeccion(tipo); 
         } else {
-            // MENSAJE MEJORADO
-            if (itemABorrar.tipo === 'seguros') {
-                mostrarPopup("⚠️ No se puede eliminar: Este seguro tiene facturas o siniestros asociados. Elimina primero el historial.");
-            } else {
-                mostrarPopup("Error al eliminar.");
-            }
+            const texto = await res.text();
+            alert("Error del servidor: " + texto);
         }
-    } catch (e) { mostrarPopup("Error de conexión."); }
+    } catch (error) {
+        alert("Error de conexión: " + error.message);
+    } finally {
+        if(btn) btn.innerHTML = 'Confirmar Eliminación';
+        if(modalBorrado) modalBorrado.hide();
+    }
+}
+// NUEVA FUNCIÓN: CREAR USUARIO DESDE MODAL
+async function crearUsuarioNuevo(e) {
+    e.preventDefault();
+    const nombre = document.getElementById('newUserName').value;
+    const correo = document.getElementById('newUserEmail').value;
+    const password = document.getElementById('newUserPass').value;
+    const rol = document.getElementById('newUserRol').value;
+
+    const nuevoUsuario = { nombreCompleto: nombre, correo, password, rol, activo: true };
+
+    try {
+        const res = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(nuevoUsuario)
+        });
+
+        if(res.ok) {
+            modalCrearUser.hide();
+            mostrarPopup("Usuario creado con éxito.");
+            document.getElementById('formCrearUsuario').reset();
+            cargarSeccion('usuarios'); 
+        } else {
+            const txt = await res.text();
+            mostrarPopup("Error al crear usuario: " + txt);
+        }
+    } catch(err) {
+        mostrarPopup("Error de conexión.");
+    }
 }
 
 // --- FUNCIÓN 1: MODIFICADA PARA MOSTRAR BOTONES DE PDF ---
@@ -819,41 +1653,23 @@ function prepararFactura(factura) {
                 </tfoot>
             </table>
         </div>`;
-
     document.getElementById('areaImpresion').innerHTML = contenidoFactura;
 
-    // AQUÍ ESTABA EL FALLO: Ahora el botón llama a 'descargarPDF'
     const footerModal = document.getElementById('printModal').querySelector('.modal-footer');
     footerModal.innerHTML = `
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
         <button type="button" class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir</button>
         <button type="button" class="btn btn-success" onclick="descargarPDF(${factura.idFactura})"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
     `;
-
     modalPrint.show();
 }
 
-// =========================================================
-// FUNCIÓN PARA DESCARGAR PDF
-// =========================================================
 function descargarPDF(id) {
-    console.log("Iniciando descarga para factura:", id);
-
-    // 1. Buscamos la factura
     const elemento = document.getElementById('facturaImprimible');
-    
-    if (!elemento) {
-        alert("Error: No se encuentra la factura.");
+    if (!elemento || typeof html2pdf === 'undefined') {
+        alert("Error: Librería PDF no cargada.");
         return;
     }
-
-    // 2. Comprobamos la librería
-    if (typeof html2pdf === 'undefined') {
-        alert("Error: Librería html2pdf no cargada en index.html");
-        return;
-    }
-
-    // 3. Configuración y descarga
     const opciones = {
         margin:       10,
         filename:     `Factura_${id}.pdf`,
@@ -861,39 +1677,120 @@ function descargarPDF(id) {
         html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-
     html2pdf().set(opciones).from(elemento).save();
 }
+// =========================================================
+// 6. LÓGICA 2FA (SETUP Y CONFIRMACIÓN)
+// =========================================================
+let modal2FA; // Variable global para controlar la ventana
 
-// --- FUNCIÓN 3: IMPRIMIR (Nueva) ---
-function accionImprimir() {
-    const contenido = document.getElementById('areaImpresion').innerHTML;
-    const ventana = window.open('', '', 'height=600,width=800');
-    ventana.document.write('<html><head><title>Imprimir</title>');
-    // Cargamos bootstrap también en la impresión para que no salga feo
-    ventana.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">');
-    ventana.document.write('</head><body>');
-    ventana.document.write(contenido);
-    ventana.document.write('</body></html>');
-    ventana.document.close();
-    setTimeout(() => { ventana.print(); ventana.close(); }, 500);
+async function iniciarSetup2FA() {
+    // Inicializar el modal de Bootstrap si no existe aún
+    if (!modal2FA) modal2FA = new bootstrap.Modal(document.getElementById('modal2FA'));
+    
+    try {
+        // 1. Pedir al servidor que genere un secreto y la URL del QR
+        const res = await fetch(`${API_URL}/auth/setup-2fa`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ correo: usuario.correo })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            
+            // 2. Limpiar el contenedor del QR anterior (si había)
+            document.getElementById('qrContainer').innerHTML = ""; 
+            
+            // 3. Dibujar el nuevo QR usando la librería que pusimos en el HTML
+            new QRCode(document.getElementById("qrContainer"), {
+                text: data.qrUrl,
+                width: 150,
+                height: 150
+            });
+            
+            // 4. Mostrar la ventana
+            modal2FA.show();
+        } else {
+            mostrarPopup("Error al iniciar configuración 2FA");
+        }
+    } catch (e) {
+        console.error(e);
+        mostrarPopup("Error de conexión");
+    }
 }
 
-// --- EXTRAS: RECUPERAR CONTRASEÑA ---
-async function recuperarContrasena() {
-    const correoInput = prompt("Introduce tu correo para restablecer la contraseña:");
-    if (correoInput) {
-        document.body.style.cursor = 'wait';
-        await new Promise(r => setTimeout(r, 1000)); // Simula espera
-        document.body.style.cursor = 'default';
-        alert(`✅ Enlace enviado a: ${correoInput}\nRevisa tu correo.`);
+async function confirmarActivacion2FA() {
+    // Leemos el código que ha escrito el usuario
+    const codigo = document.getElementById('inputCodeConfirm').value;
+    
+    if (codigo.length !== 6) {
+        alert("El código debe tener 6 dígitos");
+        return;
+    }
+
+    try {
+        // Enviamos el código al servidor para confirmar
+        const res = await fetch(`${API_URL}/auth/confirm-2fa`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ correo: usuario.correo, codigo: codigo })
+        });
+
+        if (res.ok) {
+            modal2FA.hide(); // Cerramos ventana
+            mostrarPopup("¡Éxito! 2FA Activado correctamente.");
+            
+            // Actualizamos la memoria del navegador para saber que ya está activado
+            usuario.twoFactorEnabled = true;
+            sessionStorage.setItem('usuario', JSON.stringify(usuario));
+            
+            // Recargamos la sección para que se vea el botón verde
+            renderizarConfiguracion(document.getElementById('contenido-dinamico'));
+        } else {
+            alert("Código incorrecto. Inténtalo de nuevo.");
+        }
+    } catch (e) {
+        mostrarPopup("Error al confirmar.");
+    }
+}
+async function desactivar2FA() {
+    // Pedimos confirmación para evitar clics accidentales
+    if (!confirm("¿Seguro que quieres eliminar la protección de doble factor? Tu cuenta será menos segura.")) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/auth/disable-2fa`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ correo: usuario.correo })
+        });
+
+        if (res.ok) {
+            mostrarPopup("Has desactivado la autenticación en dos pasos.");
+            
+            // Actualizamos la memoria del navegador
+            usuario.twoFactorEnabled = false;
+            sessionStorage.setItem('usuario', JSON.stringify(usuario));
+            
+            // Recargamos la pantalla para ver el botón azul de nuevo
+            renderizarConfiguracion(document.getElementById('contenido-dinamico'));
+        } else {
+            mostrarPopup("Error al desactivar.");
+        }
+    } catch (e) {
+        console.error(e);
+        mostrarPopup("Error de conexión.");
     }
 }
 
 function renderizarCargando(c, t) { c.innerHTML = `<div class="text-center mt-5"><div class="spinner-border text-primary"></div><p>${t}</p></div>`; }
 function mostrarError(c) { c.innerHTML = '<div class="alert alert-danger">Error de conexión con el servidor.</div>'; }
 function mostrarPopup(msg) { document.getElementById('modalMensaje').textContent = msg; modalInfo.show(); }
-function abrirModalEmpresa() { modalEmpresa.show(); }
 function logout() { sessionStorage.removeItem('usuario'); window.location.href = 'index.html'; }
 --- styles.css ---
 /* Layout Global */

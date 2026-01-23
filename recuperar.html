@@ -3,115 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restablecer Contraseña</title>
+    <title>Recuperar Contraseña</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f0f2f5; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .card-rec { width: 100%; max-width: 400px; padding: 2rem; border-radius: 10px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        body { 
+            background: linear-gradient(135deg, #f0f2f5 0%, #e1e4e8 100%);
+            height: 100vh; display: flex; align-items: center; justify-content: center; 
+        }
+        .card-rec { width: 100%; max-width: 400px; padding: 2rem; border-radius: 15px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
     <div class="card-rec text-center">
         <div class="mb-4">
             <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                <i class="fa-solid fa-lock-open fa-2x"></i>
+                <i class="fa-solid fa-envelope-open-text fa-2x"></i>
             </div>
         </div>
-        <h3 class="mb-2 text-dark">Restablecer Contraseña</h3>
-        <p class="text-muted mb-4 small">Introduce tu correo y define una nueva clave.</p>
+        <h3 class="mb-2 text-dark fw-bold">¿Olvidaste tu contraseña?</h3>
+        <p class="text-muted mb-4 small">Introduce tu correo y te enviaremos un enlace para restablecerla.</p>
         
-        <form id="formReset">
+        <form id="formRecuperar">
             <div class="mb-3 text-start">
                 <label class="form-label fw-bold small">Correo Electrónico</label>
                 <input type="email" class="form-control" id="emailRec" required placeholder="ej: admin@test.com">
             </div>
-            
-            <div class="mb-4 text-start">
-                <label class="form-label fw-bold small">Nueva Contraseña</label>
-                <div class="input-group">
-                    <input type="password" class="form-control" id="newPass" required placeholder="Mínimo 4 caracteres">
-                    <button class="btn btn-outline-secondary" type="button" onclick="togglePass()">
-                        <i class="fa-solid fa-eye" id="eyeIcon"></i>
-                    </button>
-                </div>
-            </div>
 
             <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary fw-bold">Actualizar Contraseña</button>
-                <a href="index.html" class="btn btn-light text-muted">Cancelar y Volver</a>
+                <button type="submit" class="btn btn-primary fw-bold">Enviar Enlace</button>
+                <a href="index.html" class="btn btn-light text-muted">Volver al Login</a>
             </div>
         </form>
 
-        <div id="mensajeExito" class="alert alert-success mt-3 d-none text-start small">
-            <i class="fa-solid fa-check-circle me-1"></i> <strong>¡Éxito!</strong> Contraseña cambiada. Redirigiendo...
-        </div>
-        <div id="mensajeError" class="alert alert-danger mt-3 d-none text-start small"></div>
+        <div id="mensaje" class="alert mt-3 d-none text-start small"></div>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:8081/api/auth/reset-password';
-
-        document.getElementById('formReset').addEventListener('submit', async (e) => {
+        document.getElementById('formRecuperar').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const correo = document.getElementById('emailRec').value;
-            const pass = document.getElementById('newPass').value;
-            const btn = e.target.querySelector('button[type="submit"]');
-            const msgExito = document.getElementById('mensajeExito');
-            const msgError = document.getElementById('mensajeError');
+            const btn = e.target.querySelector('button');
+            const msgDiv = document.getElementById('mensaje');
 
-            // Limpiar mensajes previos
-            msgExito.classList.add('d-none');
-            msgError.classList.add('d-none');
             btn.disabled = true;
-            btn.textContent = "Verificando...";
+            btn.textContent = "Enviando...";
+            msgDiv.classList.add('d-none');
 
             try {
-                const response = await fetch(API_URL, {
+                // Llamamos al backend para que envíe el email
+                const response = await fetch('http://localhost:8081/api/auth/forgot-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ correo: correo, nuevaPassword: pass })
+                    body: JSON.stringify({ correo: correo })
                 });
 
-                if (response.ok) {
-                    // Si el correo existía y se cambió
-                    msgExito.classList.remove('d-none');
-                    btn.textContent = "¡Hecho!";
-                    
-                    // Redirigir al login tras 2 segundos
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 2000);
-                } else {
-                    // Si el correo no existe (400 Bad Request)
-                    const textoError = await response.text();
-                    msgError.textContent = textoError || "Error: Correo no encontrado.";
-                    msgError.classList.remove('d-none');
-                    btn.disabled = false;
-                    btn.textContent = "Actualizar Contraseña";
-                }
+                // Mostramos mensaje de éxito
+                msgDiv.textContent = "Si el correo es correcto, recibirás un enlace en breve.";
+                msgDiv.className = 'alert alert-success mt-3 text-start small';
+                msgDiv.classList.remove('d-none');
+                
             } catch (error) {
-                console.error(error);
-                msgError.textContent = "Error de conexión con el servidor.";
-                msgError.classList.remove('d-none');
+                msgDiv.textContent = "Error de conexión.";
+                msgDiv.className = 'alert alert-danger mt-3 text-start small';
+                msgDiv.classList.remove('d-none');
+            } finally {
                 btn.disabled = false;
-                btn.textContent = "Actualizar Contraseña";
+                btn.textContent = "Enviar Enlace";
             }
         });
-
-        // Función para ver/ocultar contraseña
-        function togglePass() {
-            const input = document.getElementById('newPass');
-            const icon = document.getElementById('eyeIcon');
-            if (input.type === "password") {
-                input.type = "text";
-                icon.classList.replace("fa-eye", "fa-eye-slash");
-            } else {
-                input.type = "password";
-                icon.classList.replace("fa-eye-slash", "fa-eye");
-            }
-        }
     </script>
 </body>
 </html>

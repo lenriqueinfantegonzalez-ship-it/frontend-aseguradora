@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Contraseña</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #f0f2f5 0%, #e1e4e8 100%);
+            height: 100vh; display: flex; align-items: center; justify-content: center; 
+        }
+        .card-rec { width: 100%; max-width: 400px; padding: 2rem; border-radius: 15px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="card-rec text-center">
+        <div class="mb-4">
+            <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                <i class="fa-solid fa-key fa-2x"></i>
+            </div>
+        </div>
+        <h3 class="mb-2 text-dark fw-bold">Nueva Contraseña</h3>
+        <p class="text-muted mb-4 small">Por seguridad, introduce tu nueva clave dos veces.</p>
+        
+        <form id="formRestablecer">
+            <div class="mb-3 text-start">
+                <label class="form-label fw-bold small">Nueva Contraseña</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="newPass" required placeholder="Mínimo 4 caracteres">
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePass('newPass', 'icon1')">
+                        <i class="fa-solid fa-eye" id="icon1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-4 text-start">
+                <label class="form-label fw-bold small">Repite la Contraseña</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="confirmPass" required placeholder="Vuelve a escribirla">
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePass('confirmPass', 'icon2')">
+                        <i class="fa-solid fa-eye" id="icon2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary fw-bold">Guardar y Acceder</button>
+            </div>
+        </form>
+
+        <div id="mensaje" class="alert mt-3 d-none text-start small"></div>
+    </div>
+
+    <script>
+        // 1. EXTRAER EL TOKEN DE LA URL
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+
+        if (!token) {
+            document.body.innerHTML = '<div class="alert alert-danger m-5">Error: Enlace inválido o incompleto.</div>';
+        }
+
+        // 2. ENVIAR NUEVA CONTRASEÑA
+        document.getElementById('formRestablecer').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const pass1 = document.getElementById('newPass').value;
+            const pass2 = document.getElementById('confirmPass').value;
+            const btn = e.target.querySelector('button[type="submit"]');
+            const msgDiv = document.getElementById('mensaje');
+
+            // --- VALIDACIÓN: ¿COINCIDEN? ---
+            if (pass1 !== pass2) {
+                msgDiv.textContent = "Error: Las contraseñas no coinciden.";
+                msgDiv.className = 'alert alert-danger mt-3 text-start small';
+                msgDiv.classList.remove('d-none');
+                return; // Cortamos aquí, no enviamos nada al servidor
+            }
+
+            // Si coinciden, seguimos...
+            btn.disabled = true;
+            btn.textContent = "Guardando...";
+            msgDiv.classList.add('d-none');
+
+            try {
+                const response = await fetch('http://localhost:8081/api/auth/reset-password-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token, nuevaPassword: pass1 })
+                });
+
+                if (response.ok) {
+                    msgDiv.textContent = "¡Contraseña actualizada! Redirigiendo al login...";
+                    msgDiv.className = 'alert alert-success mt-3 text-start small';
+                    msgDiv.classList.remove('d-none');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                } else {
+                    const texto = await response.text();
+                    msgDiv.textContent = "Error: " + texto;
+                    msgDiv.className = 'alert alert-danger mt-3 text-start small';
+                    msgDiv.classList.remove('d-none');
+                    btn.disabled = false;
+                    btn.textContent = "Intentar de nuevo";
+                }
+            } catch (error) {
+                console.error(error);
+                msgDiv.textContent = "Error de conexión.";
+                msgDiv.className = 'alert alert-danger mt-3 text-start small';
+                msgDiv.classList.remove('d-none');
+                btn.disabled = false;
+                btn.textContent = "Guardar y Acceder";
+            }
+        });
+
+        // Función reutilizable para ver/ocultar contraseña
+        function togglePass(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.replace("fa-eye", "fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.replace("fa-eye-slash", "fa-eye");
+            }
+        }
+    </script>
+</body>
+</html>

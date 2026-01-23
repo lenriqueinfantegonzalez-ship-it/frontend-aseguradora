@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activar Cuenta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #0d6efd 0%, #0099ff 100%);
+            height: 100vh; display: flex; align-items: center; justify-content: center; 
+        }
+        .card-confirm { width: 100%; max-width: 450px; padding: 2.5rem; border-radius: 15px; background: white; box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+    <div class="card-confirm text-center">
+        <div id="loadingIcon" class="mb-4">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+        </div>
+        
+        <div id="successIcon" class="mb-4 d-none">
+            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <i class="fa-solid fa-check fa-3x"></i>
+            </div>
+        </div>
+        <div id="errorIcon" class="mb-4 d-none">
+            <div class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <i class="fa-solid fa-xmark fa-3x"></i>
+            </div>
+        </div>
+
+        <h3 id="titulo" class="mb-3 fw-bold text-dark">Verificando...</h3>
+        <p id="mensaje" class="text-muted mb-4">Estamos confirmando tu correo electrónico, por favor espera.</p>
+        
+        <a href="index.html" id="btnLogin" class="btn btn-primary btn-lg w-100 fw-bold d-none">Ir al Inicio de Sesión</a>
+    </div>
+
+    <script>
+        // Al cargar la página, extraemos el token y llamamos al servidor
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+
+            if (!token) {
+                mostrarError("Enlace inválido o incompleto.");
+                return;
+            }
+
+            try {
+                // Llamada al Backend para confirmar
+                const response = await fetch('http://localhost:8081/api/auth/confirm-account', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token })
+                });
+
+                if (response.ok) {
+                    mostrarExito();
+                } else {
+                    const texto = await response.text();
+                    mostrarError(texto || "No se pudo activar la cuenta.");
+                }
+            } catch (error) {
+                mostrarError("Error de conexión con el servidor.");
+            }
+        });
+
+        function mostrarExito() {
+            document.getElementById('loadingIcon').classList.add('d-none');
+            document.getElementById('successIcon').classList.remove('d-none');
+            document.getElementById('titulo').textContent = "¡Cuenta Activada!";
+            document.getElementById('mensaje').textContent = "Tu correo ha sido confirmado correctamente. Ya puedes acceder a la plataforma.";
+            document.getElementById('btnLogin').classList.remove('d-none');
+        }
+
+        function mostrarError(msg) {
+            document.getElementById('loadingIcon').classList.add('d-none');
+            document.getElementById('errorIcon').classList.remove('d-none');
+            document.getElementById('titulo').textContent = "Error de Activación";
+            document.getElementById('mensaje').textContent = msg;
+            document.getElementById('mensaje').classList.add('text-danger');
+            
+            const btn = document.getElementById('btnLogin');
+            btn.classList.remove('d-none');
+            btn.textContent = "Volver al Inicio";
+            btn.classList.replace('btn-primary', 'btn-secondary');
+        }
+    </script>
+</body>
+</html>

@@ -340,6 +340,83 @@ frontend-aseguradora/
         </div>
     </div>
 </div>
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Editar Usuario</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarUsuario">
+                    <input type="hidden" id="editUserId">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre Completo</label>
+                        <input type="text" id="editUserNombre" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Correo (No modificable)</label>
+                        <input type="email" id="editUserEmail" class="form-control bg-light" disabled>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Rol</label>
+                            <select id="editUserRol" class="form-select">
+                                <option value="USER">Cliente (USER)</option>
+                                <option value="ADMIN">Administrador</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Estado</label>
+                            <select id="editUserActivo" class="form-select">
+                                <option value="true">Activo</option>
+                                <option value="false">Inactivo (Bloqueado)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditarSiniestro" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold">Gestionar Siniestro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarSiniestro">
+                    <input type="hidden" id="editSinId">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descripción del Cliente</label>
+                        <textarea id="editSinDesc" class="form-control bg-light" rows="3" disabled></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Estado</label>
+                        <select id="editSinEstado" class="form-select">
+                            <option value="ABIERTO">ABIERTO (En trámite)</option>
+                            <option value="CERRADO">CERRADO (Resuelto)</option>
+                            <option value="RECHAZADO">RECHAZADO</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Resolución Técnica / Comentarios</label>
+                        <textarea id="editSinResolucion" class="form-control" rows="4" placeholder="Escriba aquí la solución o motivo del cierre..."></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-warning fw-bold">Actualizar Expediente</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="script.js"></script>
 </body>
@@ -737,9 +814,14 @@ const API_URL = 'http://localhost:8081/api';
 const usuarioGuardado = sessionStorage.getItem('usuario');
 let usuario = null;
 
-// Variables para los Modales (Popups)
+// Variables para los Modales
 let modalInfo, modalConfirm, modalEmpresa, modalPrint, modalCrearUser;
-let itemABorrar = { tipo: '', id: 0 };
+let modalBorrado, modal2FA;
+let modalEditarUser, modalEditarSin; // Modales de edición
+
+// Variables globales para el borrado V2
+var borrado_V2_Tipo = "";
+var borrado_V2_Id = 0;
 
 // =========================================================
 // 2. INICIALIZACIÓN
@@ -757,29 +839,31 @@ if (!usuarioGuardado) {
         if (usuario.rol !== 'ADMIN') {
             document.querySelectorAll('.admin-only').forEach(el => {
                 el.style.display = 'none'; 
-                el.innerHTML = ''; // Vaciar contenido por seguridad
+                el.innerHTML = ''; 
             });
         }
 
         // Inicializar Modales de Bootstrap
-        modalInfo = new bootstrap.Modal(document.getElementById('infoModal'));
-        modalConfirm = new bootstrap.Modal(document.getElementById('confirmModal'));
-        modalPrint = new bootstrap.Modal(document.getElementById('printModal'));
+        if(document.getElementById('infoModal')) modalInfo = new bootstrap.Modal(document.getElementById('infoModal'));
+        if(document.getElementById('printModal')) modalPrint = new bootstrap.Modal(document.getElementById('printModal'));
+        if(document.getElementById('modalCrearUsuario')) modalCrearUser = new bootstrap.Modal(document.getElementById('modalCrearUsuario'));
+        if(document.getElementById('modalBorrado')) modalBorrado = new bootstrap.Modal(document.getElementById('modalBorrado'));
+        if(document.getElementById('modal2FA')) modal2FA = new bootstrap.Modal(document.getElementById('modal2FA'));
+        if(document.getElementById('empresaModal')) modalEmpresa = new bootstrap.Modal(document.getElementById('empresaModal'));
         
-        // Inicializar modal de empresa si existe (aunque ahora estará en el footer)
-        const elModalEmpresa = document.getElementById('empresaModal');
-        if (elModalEmpresa) modalEmpresa = new bootstrap.Modal(elModalEmpresa);
-        
-        // Inicializar modal de crear usuario
-        const elModalUser = document.getElementById('modalCrearUsuario');
-        if(elModalUser) modalCrearUser = new bootstrap.Modal(elModalUser);
+        // Modales de Edición
+        if(document.getElementById('modalEditarUsuario')) modalEditarUser = new bootstrap.Modal(document.getElementById('modalEditarUsuario'));
+        if(document.getElementById('modalEditarSiniestro')) modalEditarSin = new bootstrap.Modal(document.getElementById('modalEditarSiniestro'));
 
-        
-        // Listener formulario crear usuario
+        // Listeners Formularios
         const formUser = document.getElementById('formCrearUsuario');
-        if(formUser) {
-            formUser.addEventListener('submit', crearUsuarioNuevo);
-        }
+        if(formUser) formUser.addEventListener('submit', crearUsuarioNuevo);
+        
+        const formEditUser = document.getElementById('formEditarUsuario');
+        if(formEditUser) formEditUser.addEventListener('submit', guardarEdicionUsuario);
+        
+        const formEditSin = document.getElementById('formEditarSiniestro');
+        if(formEditSin) formEditSin.addEventListener('submit', guardarEdicionSiniestro);
 
         // Cargar la primera sección por defecto
         cargarSeccion('mis-seguros');
@@ -791,362 +875,278 @@ if (!usuarioGuardado) {
 // =========================================================
 async function cargarSeccion(seccion) {
     const contenedor = document.getElementById('contenido-dinamico');
-    // Quitar clase 'active' de todos los links
     document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-
-    // --- SECCIÓN: MIS SEGUROS (Lógica Centralizada) ---
+    
+    // --- SECCIÓN: MIS SEGUROS ---
     if (seccion === 'mis-seguros') {
         const titulo = usuario.rol === 'ADMIN' ? 'Gestión Global de Pólizas' : 'Mis Pólizas Contratadas';
         renderizarCargando(contenedor, 'Cargando pólizas...');
         try {
-            // LOGICA CAMBIADA:
-            // Admin -> Pide TODOS los seguros (/api/seguros)
-            // User -> Pide SUS seguros (/api/seguros/usuario/ID)
-            let endpoint = '';
-            if (usuario.rol === 'ADMIN') {
-                endpoint = `${API_URL}/seguros`; // Asumiendo que has creado este endpoint global en Java
-            } else {
-                endpoint = `${API_URL}/seguros/usuario/${usuario.idUsuario}`;
-            }
-
+            let endpoint = usuario.rol === 'ADMIN' ? `${API_URL}/seguros` : `${API_URL}/seguros/usuario/${usuario.idUsuario}`;
             const res = await fetch(endpoint, { credentials: 'include' });
             
-            // Si falla el endpoint global (404), fallback al del usuario para que no rompa
+            // Fallback para admin si falla la carga global
             if (!res.ok && usuario.rol === 'ADMIN') {
-                const resB = await fetch(`${API_URL}/seguros/usuario/${usuario.idUsuario}`, { credentials: 'include' });
-                const segurosB = await resB.json();
-                renderizarSeguros(segurosB, contenedor, titulo);
+                 const resB = await fetch(`${API_URL}/seguros/usuario/${usuario.idUsuario}`, { credentials: 'include' });
+                 if(resB.ok) renderizarSeguros(await resB.json(), contenedor, titulo);
+                 else throw new Error("Error cargando seguros");
             } else if (res.ok) {
-                const seguros = await res.json();
-                renderizarSeguros(seguros, contenedor, titulo);
-            } else {
-                throw new Error("Error al cargar seguros");
-            }
+                renderizarSeguros(await res.json(), contenedor, titulo);
+            } else { throw new Error("Error al cargar seguros"); }
         } catch (e) { mostrarError(contenedor); }
 
- // --- SECCIÓN: FACTURAS ---
+    // --- SECCIÓN: FACTURAS ---
     } else if (seccion === 'facturas') {
         const titulo = usuario.rol === 'ADMIN' ? 'Control de Facturación Global' : 'Mis Facturas';
         renderizarCargando(contenedor, 'Cargando facturas...');
-        
         try {
-            // LÓGICA INTELIGENTE:
-            // Si es ADMIN -> Trae TODAS (/api/facturas)
-            // Si es USER  -> Trae SOLO LAS SUYAS (/api/facturas/usuario/ID)
-            const endpoint = usuario.rol === 'ADMIN' 
-                ? `${API_URL}/facturas` 
-                : `${API_URL}/facturas/usuario/${usuario.idUsuario}`;
-
+            const endpoint = usuario.rol === 'ADMIN' ? `${API_URL}/facturas` : `${API_URL}/facturas/usuario/${usuario.idUsuario}`;
             const res = await fetch(endpoint, { credentials: 'include' });
-            
-            if (res.ok) {
-                const facturas = await res.json();
-                renderizarFacturas(facturas, contenedor, titulo);
-            } else {
-                mostrarError(contenedor);
-            }
+            if (res.ok) renderizarFacturas(await res.json(), contenedor, titulo);
+            else mostrarError(contenedor);
         } catch (e) { mostrarError(contenedor); }
 
-  // --- SECCIÓN: SINIESTROS ---
+    // --- SECCIÓN: SINIESTROS ---
     } else if (seccion === 'siniestros') {
         const titulo = usuario.rol === 'ADMIN' ? 'Gestión de Siniestros (Todos)' : 'Mis Siniestros';
         renderizarCargando(contenedor, 'Cargando siniestros...');
-        
         try {
-            // 1. Obtener la lista de siniestros (Todos o Míos)
-            const endpointSin = usuario.rol === 'ADMIN' 
-                ? `${API_URL}/siniestros` 
-                : `${API_URL}/siniestros/usuario/${usuario.idUsuario}`;
-            
+            const endpointSin = usuario.rol === 'ADMIN' ? `${API_URL}/siniestros` : `${API_URL}/siniestros/usuario/${usuario.idUsuario}`;
             const resSin = await fetch(endpointSin, { credentials: 'include' });
             const listaSiniestros = await resSin.json();
-            
-            // 2. Obtener lista de seguros (necesario para el desplegable de "Nuevo Siniestro")
-            // (El Admin necesita ver TODOS los seguros para poder abrir partes en nombre de otros si quisiera, 
-            // o al menos sus propios seguros para pruebas).
-            const endpointSeg = usuario.rol === 'ADMIN' 
-                ? `${API_URL}/seguros`
-                : `${API_URL}/seguros/usuario/${usuario.idUsuario}`;
 
+            const endpointSeg = usuario.rol === 'ADMIN' ? `${API_URL}/seguros` : `${API_URL}/seguros/usuario/${usuario.idUsuario}`;
             const resSeg = await fetch(endpointSeg, { credentials: 'include' });
             const listaSeguros = await resSeg.json();
 
             renderizarSiniestros(listaSiniestros, listaSeguros, contenedor, titulo);
-
         } catch (e) { mostrarError(contenedor); }
 
-    // --- SECCIÓN: USUARIOS (NUEVA) ---
+    // --- SECCIÓN: USUARIOS (SOLO ADMIN) ---
     } else if (seccion === 'usuarios') {
+        if (usuario.rol !== 'ADMIN') { contenedor.innerHTML = '<div class="alert alert-danger">Acceso Denegado</div>'; return; }
         renderizarCargando(contenedor, 'Cargando directorio de usuarios...');
         try {
             const res = await fetch(`${API_URL}/usuarios`, { credentials: 'include' });
-            if(res.ok) {
-                const lista = await res.json();
-                renderizarUsuarios(lista, contenedor);
-            } else {
-                contenedor.innerHTML = '<div class="alert alert-warning">No se pudo cargar la lista de usuarios.</div>';
-            }
+            if(res.ok) renderizarUsuarios(await res.json(), contenedor);
+            else contenedor.innerHTML = '<div class="alert alert-warning">No se pudo cargar la lista.</div>';
         } catch (e) { mostrarError(contenedor); }
 
-    // --- SECCIÓN: AÑADIR SEGURO (SOLO ADMIN) ---
+    // --- SECCIÓN: AÑADIR SEGURO ---
     } else if (seccion === 'anadir-seguro') {
         renderizarCargando(contenedor, 'Cargando datos del formulario...');
         try {
-            // 1. Cargar tipos de seguro
             const resTipos = await fetch(`${API_URL}/tipos-seguro`, { credentials: 'include' });
             const tipos = await resTipos.json();
-
-            // 2. Cargar lista de usuarios (Para asignar el seguro)
             const resUsers = await fetch(`${API_URL}/usuarios`, { credentials: 'include' });
             const usuariosLista = await resUsers.json();
-
             renderizarFormularioAlta(tipos, usuariosLista, contenedor);
         } catch (e) { mostrarError(contenedor); }
     
-    // --- SECCIONES ESTÁNDAR (RESTAURADAS) ---
-    } else if (seccion === 'perfil') {
-        renderizarPerfil(contenedor);
-
-    } else if (seccion === 'ayuda') {
-        renderizarAyuda(contenedor);
-
-    } else if (seccion === 'config') {
-        renderizarConfiguracion(contenedor);
-
-    } else if (seccion === 'privacidad') {
-        renderizarPrivacidad(contenedor);
-    }
+    // --- OTRAS SECCIONES ---
+    } else if (seccion === 'perfil') { renderizarPerfil(contenedor);
+    } else if (seccion === 'ayuda') { renderizarAyuda(contenedor);
+    } else if (seccion === 'config') { renderizarConfiguracion(contenedor);
+    } else if (seccion === 'privacidad') { renderizarPrivacidad(contenedor); }
 }
 
 // =========================================================
 // 4. RENDERIZADORES (VISTAS)
 // =========================================================
 
-// --- VISTA SEGUROS (ADAPTADA ADMIN/USER) ---
+// --- VISTA SEGUROS ---
 function renderizarSeguros(lista, contenedor, titulo) {
-    if (lista.length === 0) { 
-        contenedor.innerHTML = `<h3 class="mb-4">${titulo}</h3><div class="alert alert-info shadow-sm">No hay pólizas registradas.</div>`; 
+    if (!lista || lista.length === 0) { 
+        contenedor.innerHTML = `<h3 class="mb-4">${titulo}</h3><div class="alert alert-info shadow-sm">No hay pólizas registradas.</div>`;
         return; 
     }
     
-    let html = `<h3 class="mb-4">${titulo}</h3><div class="row">`;
+    const htmlBuscador = `
+    <div class="row mb-4">
+        <div class="col-md-8"><h3 class="mb-0">${titulo}</h3></div>
+        <div class="col-md-4"><div class="input-group shadow-sm"><span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-search text-muted"></i></span><input type="text" id="buscadorSeguros" class="form-control border-start-0" placeholder="Buscar póliza, tipo..."></div></div>
+    </div>`;
+    
+    let htmlLista = '<div class="row" id="listaSeguros">';
     lista.forEach(seguro => {
         let icono = '🛡️';
-        // Protección contra null en tipoSeguro
         const nombreTipo = seguro.tipoSeguro ? seguro.tipoSeguro.nombre : 'Póliza Genérica';
-        const n = nombreTipo.toLowerCase();
+        if(nombreTipo.toLowerCase().includes('coche')) icono = '🚗';
+        else if(nombreTipo.toLowerCase().includes('hogar')) icono = '🏠';
         
-        if(n.includes('coche')) icono = '🚗';
-        else if(n.includes('moto')) icono = '🏍️';
-        else if(n.includes('hogar')) icono = '🏠';
-        else if(n.includes('vida') || n.includes('salud')) icono = '❤️';
-
-        // LÓGICA DE VISUALIZACIÓN SEGÚN ROL
         let extraInfo = '';
         let botonBorrar = '';
+        const id = seguro.idSeguro || seguro.id;
 
         if (usuario.rol === 'ADMIN') {
-            // El Admin ve quién es el dueño y botón de borrar
             const clienteNombre = seguro.usuario ? seguro.usuario.nombreCompleto : 'Sin Asignar';
-            const clienteEmail = seguro.usuario ? seguro.usuario.correo : '';
-            
-            extraInfo = `
-            <div class="mt-2 pt-2 border-top small text-muted bg-light p-2 rounded">
-                <i class="fa-solid fa-user me-1"></i> <strong>Cliente:</strong> ${clienteNombre}<br>
-                <i class="fa-solid fa-envelope me-1"></i> ${clienteEmail}
-            </div>`;
-
-            botonBorrar = `
-            <button class="btn btn-outline-danger btn-sm" onclick="solicitarBorrado('seguros', ${seguro.idSeguro})">
-                <i class="fa-solid fa-trash"></i> Eliminar
-            </button>`;
+            extraInfo = `<div class="mt-2 pt-2 border-top small text-muted bg-light p-2 rounded"><i class="fa-solid fa-user me-1"></i> <strong>Cliente:</strong> ${clienteNombre}</div>`;
+            botonBorrar = `<button class="btn btn-outline-danger btn-sm w-100 mt-2" onclick="solicitarBorrado_V2('seguros', ${id})"><i class="fa-solid fa-trash me-1"></i> Dar de Baja</button>`;
         }
 
-        html += `
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
+        htmlLista += `
+        <div class="col-md-6 mb-4 item-seguro">
+            <div class="card h-100 shadow-sm border-0 border-top border-4 border-primary">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold mb-0 text-primary">${icono} ${nombreTipo}</h5>
                         <span class="badge bg-success">ACTIVO</span>
                     </div>
                     <p class="text-muted small"><strong>PÓLIZA:</strong> ${seguro.numPoliza}</p>
-                    <p class="bg-light p-2 rounded small border">${seguro.datosEspecificos}</p>
-                    
-                    ${extraInfo} <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                    <p class="bg-light p-2 rounded small border">${seguro.datosEspecificos || 'Sin detalles'}</p>
+                    <div class="d-flex justify-content-between small text-muted border-top pt-2 mb-2"><span>Inicio: ${seguro.fechaInicio}</span><span>Renueva: ${seguro.fechaRenovacion}</span></div>
+                    ${extraInfo} 
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
                         <span class="fw-bold fs-5">${seguro.primaAnual} €/año</span>
-                        ${botonBorrar} </div>
+                    </div>
+                    ${botonBorrar}
                 </div>
             </div>
         </div>`;
     });
-    html += '</div>';
-    contenedor.innerHTML = html;
+    htmlLista += '</div>';
+    contenedor.innerHTML = htmlBuscador + htmlLista;
+
+    if(document.getElementById('buscadorSeguros')){
+        document.getElementById('buscadorSeguros').addEventListener('keyup', (e) => {
+            const texto = e.target.value.toLowerCase();
+            document.querySelectorAll('.item-seguro').forEach(item => { item.style.display = item.textContent.toLowerCase().includes(texto) ? '' : 'none'; });
+        });
+    }
 }
 
-// --- VISTA USUARIOS (NUEVA) ---
+// --- VISTA USUARIOS ---
 function renderizarUsuarios(lista, contenedor) {
     let botonCrear = '';
     let headerAcciones = '';
-    
-    // Solo Admin puede crear
     if (usuario.rol === 'ADMIN') {
-        botonCrear = `
-        <div class="mb-3 text-end">
-            <button class="btn btn-success shadow-sm" onclick="modalCrearUser.show()">
-                <i class="fa-solid fa-user-plus me-2"></i> Nuevo Usuario
-            </button>
-        </div>`;
+        botonCrear = `<button class="btn btn-success shadow-sm ms-3" onclick="modalCrearUser.show()"><i class="fa-solid fa-user-plus me-2"></i> Nuevo</button>`;
         headerAcciones = '<th class="text-end pe-4">Acciones</th>';
     }
 
-    let html = `
-    <h3 class="mb-4">Directorio de Usuarios</h3>
-    ${botonCrear}
-    <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="ps-4">Nombre Completo</th>
-                        <th>Correo Electrónico</th>
-                        <th>Rol</th>
-                        <th>Estado</th>
-                        ${headerAcciones}
-                    </tr>
-                </thead>
-                <tbody>`;
+    const htmlBuscador = `
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Directorio de Usuarios</h3>
+        <div class="d-flex"><div class="input-group shadow-sm" style="width: 250px;"><span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-search text-muted"></i></span><input type="text" id="buscadorUsuarios" class="form-control border-start-0" placeholder="Buscar usuario..."></div>${botonCrear}</div>
+    </div>`;
 
+    let htmlLista = `<div class="card border-0 shadow-sm"><div class="table-responsive">
+    <table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>
+        <th class="ps-4">Nombre Completo</th><th>Correo</th><th>Rol</th><th>Estado</th>${headerAcciones}
+    </tr></thead><tbody id="tablaUsuarios">`;
+    
     lista.forEach(u => {
-        let badgeRol = u.rol === 'ADMIN' ? 'bg-danger' : 'bg-primary';
-        let badgeEstado = u.activo ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>';
-        
+        const userJson = JSON.stringify(u).replace(/'/g, "\\'"); 
         let colAcciones = '';
+        let badgeRol = u.rol === 'ADMIN' ? 'bg-dark' : 'bg-primary';
+        let badgeEstado = u.activo ? '<span class="badge bg-success rounded-pill px-3">Activo</span>' : '<span class="badge bg-danger rounded-pill px-3">Inactivo</span>';
+
         if (usuario.rol === 'ADMIN') {
-            // Admin no se borra a sí mismo
             if (u.idUsuario !== usuario.idUsuario) {
+                // BOTONES: EDITAR Y BORRAR
                 colAcciones = `
                 <td class="text-end pe-4">
-                    <button class="btn btn-sm btn-outline-danger" onclick="solicitarBorrado('usuarios', ${u.idUsuario})" title="Eliminar Usuario">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick='cargarDatosUsuario(${userJson})' title="Editar"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="solicitarBorrado_V2('usuarios', ${u.idUsuario})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
                 </td>`;
-            } else {
-                colAcciones = '<td class="text-end pe-4"><span class="text-muted small fst-italic">Tu cuenta</span></td>';
-            }
+            } else { colAcciones = '<td class="text-end pe-4"><span class="text-muted small fst-italic">Tu cuenta</span></td>'; }
         }
-
-        html += `
-        <tr>
-            <td class="ps-4 fw-bold">${u.nombreCompleto}</td>
-            <td>${u.correo}</td>
-            <td><span class="badge ${badgeRol}">${u.rol}</span></td>
-            <td>${badgeEstado}</td>
-            ${colAcciones}
-        </tr>`;
+        
+        let iconUser = u.rol === 'ADMIN' ? '<i class="fa-solid fa-user-tie me-2 text-dark"></i>' : '<i class="fa-solid fa-user me-2 text-secondary"></i>';
+        htmlLista += `<tr><td class="ps-4 fw-bold text-dark">${iconUser}${u.nombreCompleto}</td><td>${u.correo}</td><td><span class="badge ${badgeRol}">${u.rol}</span></td><td>${badgeEstado}</td>${colAcciones}</tr>`;
     });
+    htmlLista += '</tbody></table></div></div>';
+    contenedor.innerHTML = htmlBuscador + htmlLista;
 
-    html += '</tbody></table></div></div>';
-    contenedor.innerHTML = html;
+    if(document.getElementById('buscadorUsuarios')){
+        document.getElementById('buscadorUsuarios').addEventListener('keyup', (e) => {
+            const texto = e.target.value.toLowerCase();
+            const filas = document.getElementById('tablaUsuarios').getElementsByTagName('tr');
+            for (let fila of filas) fila.style.display = fila.textContent.toLowerCase().includes(texto) ? '' : 'none';
+        });
+    }
 }
 
-// --- VISTA FACTURAS (VERSIÓN FINAL) ---
+// --- VISTA FACTURAS ---
 function renderizarFacturas(lista, contenedor, titulo) {
     const tituloMostrar = titulo || 'Mis Facturas';
-    
     if (!lista || lista.length === 0) { 
         contenedor.innerHTML = `<h3 class="mb-4">${tituloMostrar}</h3><div class="alert alert-info shadow-sm">No hay facturas disponibles.</div>`;
         return; 
     }
-    
+    const htmlBuscador = `
+    <div class="row mb-4">
+        <div class="col-md-8"><h3 class="mb-0">${tituloMostrar}</h3></div>
+        <div class="col-md-4"><div class="input-group shadow-sm"><span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-search text-muted"></i></span><input type="text" id="buscadorFacturas" class="form-control border-start-0" placeholder="Buscar concepto, importe..."></div></div>
+    </div>`;
     const thCliente = usuario.rol === 'ADMIN' ? '<th class="ps-3">Cliente</th>' : '';
-
-    let html = `
-    <h3 class="mb-4">${tituloMostrar}</h3>
-    <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="ps-4">Concepto</th>
-                        ${thCliente} 
-                        <th>Fecha</th>
-                        <th>Importe</th>
-                        <th class="text-end pe-4">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>`;
+    let htmlLista = `<div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th class="ps-4">Concepto</th>${thCliente}<th>Fecha</th><th>Importe</th><th class="text-end pe-4">Acciones</th></tr></thead><tbody id="tablaFacturas">`;
     
     lista.forEach(f => {
-        // EXTRACCIÓN DIRECTA DEL ID
-        // Usamos idFactura porque es el que viene en tu base de datos
-        const elId = f.idFactura; 
-        
+        const elId = f.idFactura || f.id; 
         const jsonF = JSON.stringify(f).replace(/"/g, '&quot;');
-        
         let tdCliente = '';
         if (usuario.rol === 'ADMIN') {
-            const nombre = (f.usuario && f.usuario.nombreCompleto) ? f.usuario.nombreCompleto : 'Desconocido';
-            const email = (f.usuario && f.usuario.correo) ? f.usuario.correo : '-';
-            tdCliente = `<td class="ps-3"><small class="fw-bold">${nombre}</small><br><small class="text-muted">${email}</small></td>`;
+            const nombre = (f.usuario) ? f.usuario.nombreCompleto : 'Desconocido';
+            tdCliente = `<td class="ps-3"><small class="fw-bold">${nombre}</small></td>`;
         }
-
-        // Dentro de renderizarFacturas...
         let btnBorrar = '';
         if (usuario.rol === 'ADMIN') {
-        // CAMBIO: Llamamos a solicitarBorrado_V2
-         btnBorrar = `<button class="btn btn-sm btn-outline-danger ms-1" onclick="solicitarBorrado_V2('facturas', ${idReal})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>`;
-}
-
-        html += `
-        <tr>
-            <td class="ps-4 fw-bold">${f.concepto}</td>
-            ${tdCliente}
-            <td>${f.fechaEmision}</td>
-            <td class="fw-bold text-primary">${f.importe} €</td>
-            <td class="text-end pe-4">
-                <button class="btn btn-sm btn-primary" onclick="prepararFactura(${jsonF})" title="Imprimir"><i class="fa-solid fa-print"></i></button>
-                ${btnBorrar}
-            </td>
-        </tr>`;
+             btnBorrar = `<button class="btn btn-sm btn-outline-danger ms-1" onclick="solicitarBorrado_V2('facturas', ${elId})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>`;
+        }
+        htmlLista += `<tr><td class="ps-4 fw-bold">${f.concepto || 'Sin concepto'}</td>${tdCliente}<td>${f.fechaEmision}</td><td class="fw-bold text-primary">${f.importe} €</td><td class="text-end pe-4"><button class="btn btn-sm btn-primary" onclick="prepararFactura(${jsonF})" title="Imprimir/PDF"><i class="fa-solid fa-print"></i></button>${btnBorrar}</td></tr>`;
     });
-    html += '</tbody></table></div></div>';
-    contenedor.innerHTML = html;
+    htmlLista += '</tbody></table></div></div>';
+    contenedor.innerHTML = htmlBuscador + htmlLista;
+    
+    if(document.getElementById('buscadorFacturas')){
+        document.getElementById('buscadorFacturas').addEventListener('keyup', (e) => {
+            const texto = e.target.value.toLowerCase();
+            const filas = document.getElementById('tablaFacturas').getElementsByTagName('tr');
+            for (let fila of filas) fila.style.display = fila.textContent.toLowerCase().includes(texto) ? '' : 'none';
+        });
+    }
 }
 
-// --- VISTA SINIESTROS (MEJORADA) ---
+// --- VISTA SINIESTROS ---
 function renderizarSiniestros(siniestros, seguros, contenedor, titulo) {
     const tituloMostrar = titulo || 'Gestión de Siniestros';
-    
-    // Preparar el desplegable para nuevo siniestro
     let opcionesSeguro = '<option value="" disabled selected>-- Seleccione Seguro --</option>';
     if (seguros.length > 0) {
-        seguros.forEach(s => {
-            // Si es Admin, mostramos también el dueño del seguro en el desplegable
-            const extra = usuario.rol === 'ADMIN' && s.usuario ? ` (${s.usuario.nombreCompleto})` : '';
-            opcionesSeguro += `<option value="${s.idSeguro}">${s.tipoSeguro.nombre} - ${s.numPoliza}${extra}</option>`;
+        seguros.forEach(s => { 
+            const extra = (usuario.rol === 'ADMIN' && s.usuario) ? ` (${s.usuario.nombreCompleto})` : '';
+            opcionesSeguro += `<option value="${s.idSeguro}">${s.tipoSeguro.nombre} - ${s.numPoliza}${extra}</option>`; 
         });
-    } else {
-        opcionesSeguro = '<option disabled>No hay seguros disponibles</option>';
-    }
+    } else { opcionesSeguro = '<option disabled>No hay seguros disponibles</option>'; }
+
+    const htmlBuscador = `<div class="mb-3"><div class="input-group shadow-sm"><span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-search text-muted"></i></span><input type="text" id="buscadorSiniestros" class="form-control border-start-0" placeholder="Buscar siniestro..."></div></div>`;
 
     let listaHTML = '';
-    if (siniestros.length === 0) {
-        listaHTML = '<div class="alert alert-success">No hay siniestros registrados.</div>';
-    } else {
+    if (siniestros.length === 0) { listaHTML = '<div class="alert alert-success">No hay siniestros registrados.</div>'; } 
+    else {
+        listaHTML += '<div id="listaSiniestros">'; 
         siniestros.forEach(s => {
-            let color = s.estado === 'ABIERTO' ? 'warning' : 'success';
+            const elId = s.idSiniestro || s.id;
+            let color = s.estado === 'ABIERTO' ? 'warning' : (s.estado === 'RECHAZADO' ? 'danger' : 'success');
+            const sinJson = JSON.stringify(s).replace(/'/g, "\\'");
             
-           
-          // Dentro de renderizarSiniestros...
-            let btnBorrar = '';
+            let acciones = '';
+            let infoCliente = '';
+            
             if (usuario.rol === 'ADMIN') {
-           // CAMBIO: Llamamos a solicitarBorrado_V2
-          btnBorrar = `<button class="btn btn-sm btn-outline-danger ms-1" onclick="solicitarBorrado_V2('siniestros', ${idReal})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>`;
-}
+               const cliente = s.seguro && s.seguro.usuario ? s.seguro.usuario : null;
+               if(cliente) infoCliente = `<div class="mb-2 small text-muted border-bottom pb-2"><i class="fa-solid fa-user me-1"></i> <strong>Cliente:</strong> ${cliente.nombreCompleto}</div>`;
+               
+               // BOTONES EDITAR Y BORRAR
+               acciones = `
+               <div>
+                   <button class="btn btn-sm btn-outline-primary me-1" onclick='cargarDatosSiniestro(${sinJson})' title="Gestionar"><i class="fa-solid fa-pen-to-square"></i></button>
+                   <button class="btn btn-sm btn-outline-secondary" onclick="solicitarBorrado_V2('siniestros', ${elId})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+               </div>`;
+            }
 
             listaHTML += `
-            <div class="card mb-3 border-${color} border-start border-3 shadow-sm">
+            <div class="card mb-3 border-${color} border-start border-3 shadow-sm item-siniestro">
                 <div class="card-body">
                     ${infoCliente}
                     <div class="d-flex justify-content-between align-items-center">
@@ -1154,643 +1154,320 @@ function renderizarSiniestros(siniestros, seguros, contenedor, titulo) {
                             <h6 class="fw-bold mb-0">Póliza: ${s.seguro ? s.seguro.numPoliza : '???'}</h6>
                             <span class="badge bg-${color} mt-1">${s.estado}</span>
                         </div>
-                        ${btnBorrar}
+                        ${acciones}
                     </div>
                     <hr class="my-2">
                     <p class="mb-1 small text-muted"><i class="fa-solid fa-calendar-day me-1"></i> ${s.fechaSuceso}</p>
                     <p class="mb-2 text-dark">${s.descripcion}</p>
-                    <div class="bg-light p-2 rounded small fst-italic border"><i class="fa-solid fa-user-shield me-1"></i> Resolución: ${s.resolucion}</div>
+                    <div class="bg-light p-2 rounded small fst-italic border"><i class="fa-solid fa-user-shield me-1"></i> Resolución: ${s.resolucion || 'Pendiente de resolución'}</div>
                 </div>
             </div>`;
         });
+        listaHTML += '</div>';
     }
 
     contenedor.innerHTML = `
     <h3 class="mb-4">${tituloMostrar}</h3>
     <div class="row">
-        <div class="col-md-5 mb-4">
-            <div class="card shadow border-0">
-                <div class="card-header bg-danger text-white fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i> Reportar Nuevo Siniestro</div>
-                <div class="card-body">
-                    <form id="formSiniestro">
-                        <div class="mb-3">
-                            <label class="fw-bold">Póliza Afectada</label>
-                            <select id="sinSeguro" class="form-select" required>${opcionesSeguro}</select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="fw-bold">Descripción del incidente</label>
-                            <textarea id="sinDesc" class="form-control" rows="4" required placeholder="Describe detalladamente qué ha ocurrido..."></textarea>
-                        </div>
-                        <div class="d-grid"><button type="submit" class="btn btn-danger">Enviar Parte</button></div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-7">
-            <h5 class="text-muted mb-3">Historial de Incidencias</h5>
-            <div style="max-height: 600px; overflow-y: auto; padding-right: 5px;">
-                ${listaHTML}
-            </div>
-        </div>
+        <div class="col-md-5 mb-4"><div class="card shadow border-0"><div class="card-header bg-danger text-white fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i> Reportar Nuevo Siniestro</div><div class="card-body">
+            <form id="formSiniestro">
+                <div class="mb-3"><label class="fw-bold">Póliza Afectada</label><select id="sinSeguro" class="form-select" required>${opcionesSeguro}</select></div>
+                <div class="mb-3"><label class="fw-bold">Descripción del incidente</label><textarea id="sinDesc" class="form-control" rows="4" required placeholder="Detalles del incidente..."></textarea></div>
+                <div class="d-grid"><button type="submit" class="btn btn-danger">Enviar Parte</button></div>
+            </form></div></div></div>
+        <div class="col-md-7"><h5 class="text-muted mb-3">Historial</h5>${htmlBuscador}<div style="max-height: 600px; overflow-y: auto;">${listaHTML}</div></div>
     </div>`;
 
-    // Re-activar el listener del formulario
-    document.getElementById('formSiniestro').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try {
-            const res = await fetch(`${API_URL}/siniestros`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ 
-                    descripcion: document.getElementById('sinDesc').value, 
-                    seguro: { idSeguro: document.getElementById('sinSeguro').value } 
-                })
-            });
-            if (res.ok) { 
-                mostrarPopup("Siniestro reportado correctamente."); 
-                cargarSeccion('siniestros'); // Recargar para ver el nuevo
-            }
-            else mostrarPopup("Error al reportar.");
-        } catch (error) { mostrarPopup("Error conexión."); }
-    });
-}
-
-// --- VISTA FORMULARIO ALTA SEGURO (MODIFICADO PARA ADMIN) ---
-function renderizarFormularioAlta(tipos, listaUsuarios, contenedor) {
-    let optsTipos = `<option value="" disabled selected>-- Seleccione Tipo --</option>`;
-    tipos.forEach(t => optsTipos += `<option value="${t.idTipo}">${t.nombre} (${t.precioBase}€)</option>`);
-
-    // Selector de Usuarios (Solo lo usa el Admin)
-    let optsUsuarios = `<option value="" disabled selected>-- Seleccione Cliente --</option>`;
-    listaUsuarios.forEach(u => {
-        const rol = u.rol === 'ADMIN' ? '(Admin)' : '(Cliente)';
-        optsUsuarios += `<option value="${u.idUsuario}">${u.nombreCompleto} - ${u.correo} ${rol}</option>`;
-    });
-
-    const poliza = 'POL-' + Math.floor(Math.random()*99999);
-    
-    contenedor.innerHTML = `
-    <h3 class="mb-4">Contratar Nuevo Seguro (Administración)</h3>
-    <div class="alert alert-primary small"><i class="fa-solid fa-info-circle me-2"></i> Como administrador, estás creando una póliza en nombre de un cliente.</div>
-    
-    <div class="card shadow-sm border-0" style="max-width: 700px;"><div class="card-body p-4">
-    <form id="formAlta">
-        <div class="mb-3">
-            <label class="fw-bold text-primary">Asignar a Cliente</label>
-            <select id="idClienteAsignado" class="form-select border-primary" required>
-                ${optsUsuarios}
-            </select>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col"><label class="fw-bold">Tipo</label><select id="idTipo" class="form-select" required>${optsTipos}</select></div>
-            <div class="col"><label class="fw-bold">Póliza</label><input id="numPoliza" class="form-control bg-light" value="${poliza}" readonly></div>
-        </div>
-        <div class="row mb-3">
-            <div class="col"><label>Inicio</label><input type="date" id="fInicio" class="form-control" required></div>
-            <div class="col"><label>Renovación</label><input type="date" id="fRenov" class="form-control" required></div>
-        </div>
-        <div class="mb-3"><label class="fw-bold">Detalles</label><textarea id="detalles" class="form-control" required></textarea></div>
-        <div class="mb-3"><label class="fw-bold">Precio (€)</label><input type="number" id="precio" class="form-control" required></div>
-        
-        <button type="submit" class="btn btn-primary w-100">Crear y Asignar Póliza</button>
-    </form></div></div>`;
-    
-    const iIni = document.getElementById('fInicio');
-    const iRen = document.getElementById('fRenov');
-    if(iIni && iRen) {
-        iIni.addEventListener('change', () => {
-            if (iIni.value) {
-                const d = new Date(iIni.value); d.setFullYear(d.getFullYear() + 1);
-                iRen.value = d.toISOString().split('T')[0];
-            }
+    if(document.getElementById('buscadorSiniestros')) {
+        document.getElementById('buscadorSiniestros').addEventListener('keyup', (e) => {
+            const texto = e.target.value.toLowerCase();
+            document.querySelectorAll('.item-siniestro').forEach(item => { item.style.display = item.textContent.toLowerCase().includes(texto) ? '' : 'none'; });
         });
     }
+    const formSin = document.getElementById('formSiniestro');
+    if(formSin) {
+        formSin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const res = await fetch(`${API_URL}/siniestros`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+                    body: JSON.stringify({ descripcion: document.getElementById('sinDesc').value, seguro: { idSeguro: document.getElementById('sinSeguro').value } })
+                });
+                if (res.ok) { mostrarPopup("Siniestro reportado correctamente."); cargarSeccion('siniestros'); }
+                else mostrarPopup("Error al reportar.");
+            } catch (error) { mostrarPopup("Error conexión."); }
+        });
+    }
+}
 
-    document.getElementById('formAlta').addEventListener('submit', async (e) => {
-        e.preventDefault();
+// =========================================================
+// 5. LÓGICA DE EDICIÓN (PUT)
+// =========================================================
+
+// --- A. EDICIÓN DE USUARIOS ---
+function cargarDatosUsuario(user) {
+    document.getElementById('editUserId').value = user.idUsuario;
+    document.getElementById('editUserNombre').value = user.nombreCompleto;
+    document.getElementById('editUserEmail').value = user.correo;
+    document.getElementById('editUserRol').value = user.rol;
+    document.getElementById('editUserActivo').value = user.activo.toString(); 
+    modalEditarUser.show();
+}
+
+async function guardarEdicionUsuario(e) {
+    e.preventDefault();
+    const id = document.getElementById('editUserId').value;
+    const datosEditados = {
+        idUsuario: id,
+        nombreCompleto: document.getElementById('editUserNombre').value,
+        rol: document.getElementById('editUserRol').value,
+        activo: document.getElementById('editUserActivo').value === 'true',
+        correo: document.getElementById('editUserEmail').value
+    };
+
+    try {
+        const resGet = await fetch(`${API_URL}/usuarios/${id}`, { credentials: 'include' });
+        const userActual = await resGet.json();
         
-        // Obtenemos el ID del usuario seleccionado en el Select
-        const idCliente = document.getElementById('idClienteAsignado').value;
+        // Mantener password original y actualizar resto
+        const datosFinales = { ...userActual, ...datosEditados };
 
-        const d = { 
-            numPoliza: document.getElementById('numPoliza').value, 
-            fechaInicio: document.getElementById('fInicio').value, 
-            fechaRenovacion: document.getElementById('fRenov').value, 
-            primaAnual: parseFloat(document.getElementById('precio').value), 
-            datosEspecificos: document.getElementById('detalles').value, 
-            estado: "ACTIVO", 
-            usuario: { idUsuario: idCliente }, // ASIGNACIÓN AL CLIENTE SELECCIONADO
-            tipoSeguro: { idTipo: document.getElementById('idTipo').value } 
+        const res = await fetch(`${API_URL}/usuarios/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify(datosFinales)
+        });
+
+        if (res.ok) {
+            mostrarPopup("Usuario actualizado correctamente.");
+            modalEditarUser.hide();
+            cargarSeccion('usuarios');
+        } else { mostrarPopup("Error al actualizar usuario."); }
+    } catch (error) { mostrarPopup("Error de conexión: " + error.message); }
+}
+
+// --- B. EDICIÓN DE SINIESTROS ---
+function cargarDatosSiniestro(sin) {
+    document.getElementById('editSinId').value = sin.idSiniestro || sin.id;
+    document.getElementById('editSinDesc').value = sin.descripcion;
+    document.getElementById('editSinEstado').value = sin.estado;
+    document.getElementById('editSinResolucion').value = sin.resolucion || '';
+    modalEditarSin.show();
+}
+
+async function guardarEdicionSiniestro(e) {
+    e.preventDefault();
+    const id = document.getElementById('editSinId').value;
+    try {
+        const resGet = await fetch(`${API_URL}/siniestros/${id}`, { credentials: 'include' });
+        const sinActual = await resGet.json();
+
+        const datosEditados = {
+            ...sinActual,
+            estado: document.getElementById('editSinEstado').value,
+            resolucion: document.getElementById('editSinResolucion').value
         };
-        try { 
-            const r = await fetch(`${API_URL}/seguros`, { 
-                method:'POST', 
-                headers:{'Content-Type':'application/json'}, 
-                credentials: 'include',
-                body:JSON.stringify(d)
-            }); 
-            if(r.ok){ mostrarPopup("¡Póliza creada y asignada!"); cargarSeccion('mis-seguros'); } else mostrarPopup("Error al guardar."); 
-        } catch(e){ mostrarPopup("Error conexión."); }
-    });
+
+        const res = await fetch(`${API_URL}/siniestros/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify(datosEditados)
+        });
+
+        if (res.ok) {
+            mostrarPopup("Siniestro actualizado.");
+            modalEditarSin.hide();
+            cargarSeccion('siniestros');
+        } else { mostrarPopup("Error al actualizar siniestro."); }
+
+    } catch (error) { mostrarPopup("Error de conexión."); }
 }
 
-// --- VISTA CONFIGURACIÓN (RESTAURADA COMPLETA) ---
-function renderizarConfiguracion(contenedor) {
-    // A. Si está ACTIVADO: Mostramos botón rojo para quitarlo
-    if (usuario.twoFactorEnabled) {
-        botonHtml = `
-            <div class="alert alert-success mb-3">
-                <i class="fa-solid fa-check-circle me-2"></i> Tu cuenta está protegida con doble factor.
-            </div>
-            <button class="btn btn-outline-danger w-100 shadow-sm" onclick="desactivar2FA()">
-                <i class="fa-solid fa-user-shield me-2"></i> Desactivar 2FA
-            </button>`;
-        estadoBadge = '<span class="badge bg-success fs-6 px-3 py-2">ACTIVADO</span>';
-    } 
-    // B. Si está DESACTIVADO: Mostramos botón azul para ponerlo
-    else {
-        botonHtml = `
-            <button class="btn btn-primary btn-lg w-100 mt-3 shadow-sm" onclick="iniciarSetup2FA()">
-                <i class="fa-solid fa-qrcode me-2"></i> Configurar y Activar 2FA
-            </button>`;
-        estadoBadge = '<span class="badge bg-secondary fs-6 px-3 py-2">DESACTIVADO</span>';
-    }
-
-    // Renderizamos la tarjeta
-    contenedor.innerHTML = `
-    <h3 class="mb-4">Configuración de Cuenta</h3>
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow border-0">
-                <div class="card-header bg-white p-3 border-bottom">
-                    <h5 class="fw-bold text-primary mb-0"><i class="fa-solid fa-shield-halved me-2"></i> Seguridad Avanzada</h5>
-                </div>
-                <div class="card-body p-5 text-center">
-                    <i class="fa-solid fa-mobile-screen-button text-primary fa-4x mb-4"></i>
-                    <h4 class="fw-bold mb-3">Autenticación en Dos Pasos (2FA)</h4>
-                    <p class="text-muted mb-4">
-                        Protege el inicio de sesión solicitando un código adicional desde tu móvil.
-                    </p>
-                    
-                    <div class="d-inline-block bg-light p-3 rounded border mb-3">
-                        <strong>Estado actual:</strong> ${estadoBadge}
-                    </div>
-
-                    <div class="mt-2">
-                        ${botonHtml}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>`;
-}
-// --- VISTA PERFIL (RESTAURADA COMPLETA) ---
-function renderizarPerfil(c) {
-    c.innerHTML = `<h3 class="mb-4">Mi Perfil</h3><div class="card shadow-sm border-0" style="max-width:600px;"><div class="card-body p-4"><form id="formPerfil">
-    <div class="mb-3"><label class="fw-bold">Nombre</label><input type="text" id="pN" class="form-control" value="${usuario.nombreCompleto}"></div>
-    <div class="mb-3"><label class="fw-bold">Email</label><input type="text" class="form-control bg-light" value="${usuario.correo}" disabled></div>
-    <div class="mb-3"><label class="fw-bold">Móvil</label><input type="text" id="pM" class="form-control" value="${usuario.movil||''}"></div>
-    <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
-    </form></div></div>`;
-    
-    document.getElementById('formPerfil').addEventListener('submit', async(e)=>{
-        e.preventDefault();
-        try {
-            const res = await fetch(`${API_URL}/usuarios/${usuario.idUsuario}`, { 
-                method:'PUT', 
-                headers:{'Content-Type':'application/json'}, 
-                credentials: 'include',
-                body:JSON.stringify({...usuario, nombreCompleto:document.getElementById('pN').value, movil:document.getElementById('pM').value})
-            });
-            if(res.ok){ 
-                usuario=await res.json(); 
-                sessionStorage.setItem('usuario',JSON.stringify(usuario)); 
-                document.getElementById('nombreUsuarioDisplay').textContent=usuario.nombreCompleto; 
-                mostrarPopup("Perfil actualizado."); 
-            }
-        } catch(e){mostrarPopup("Error.");}
-    });
-}
-
-// --- VISTA AYUDA (RESTAURADA COMPLETA) ---
-function renderizarAyuda(contenedor) {
-    contenedor.innerHTML = `
-    <h3 class="mb-4">Centro de Ayuda y Soporte</h3>
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h5 class="fw-bold text-primary mb-3">Envíanos tu consulta</h5>
-                    <form id="formAyuda">
-                        <div class="mb-3">
-                            <label class="form-label">Asunto</label>
-                            <select class="form-select" required><option>Duda Póliza</option><option>Problema Factura</option><option>Otro</option></select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Mensaje</label>
-                            <textarea class="form-control" rows="4" required placeholder="Describe tu consulta..."></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Enviar</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-4">
-            <div class="card bg-light border-0 h-100">
-                <div class="card-body">
-                    <h5><i class="fa-solid fa-circle-question me-2"></i>Preguntas Frecuentes</h5>
-                    <div class="accordion mt-3" id="faqAcc">
-                        <div class="accordion-item mb-2 border-0 shadow-sm">
-                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q1">No puedo borrar un seguro</button></h2>
-                            <div id="q1" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                                <div class="accordion-body text-muted small">Debes cancelar primero la factura asociada antes de eliminar el seguro, por motivos de seguridad fiscal.</div>
-                            </div>
-                        </div>
-                        <div class="accordion-item mb-2 border-0 shadow-sm">
-                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q2">¿Cómo descargar facturas?</button></h2>
-                            <div id="q2" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                                <div class="accordion-body text-muted small">Ve a la sección Facturas y pulsa el botón azul.</div>
-                            </div>
-                        </div>
-                        <div class="accordion-item mb-2 border-0 shadow-sm">
-                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q3">¿Dónde veo la información de la empresa?</button></h2>
-                            <div id="q3" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                                <div class="accordion-body text-muted small">Haz clic en el botón 'Info Empresa' en el menú lateral.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>`;
-    document.getElementById('formAyuda').addEventListener('submit', (e) => {
-        e.preventDefault();
-        mostrarPopup("Mensaje enviado. Contactaremos contigo pronto.");
-        e.target.reset();
-    });
-}
-
-// --- VISTA PRIVACIDAD (RESTAURADA COMPLETA) ---
-function renderizarPrivacidad(contenedor) {
-    const year = new Date().getFullYear();
-    contenedor.innerHTML = `
-    <h3 class="mb-4">Política de Privacidad y Aviso Legal</h3>
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-5">
-            <div class="text-center mb-5">
-                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-weight: bold; font-size: 24px;">A</div>
-                <h2 class="fw-bold text-dark">Aseguradora App</h2>
-                <p class="text-muted">Comprometidos con la transparencia y tu seguridad.</p>
-            </div>
-
-            <h5 class="fw-bold mt-4"><i class="fa-solid fa-building-shield me-2 text-primary"></i>1. Responsable del Tratamiento</h5>
-            <p class="text-justify text-muted">
-                <strong>Aseguradora App S.L.</strong>, con domicilio en Calle Mayor 123, Madrid, España, es la responsable del tratamiento de sus datos personales. Puede contactar con nuestro Delegado de Protección de Datos (DPO) en <strong>dpo@aseguradora.com</strong>.
-            </p>
-
-            <h5 class="fw-bold mt-4"><i class="fa-solid fa-file-contract me-2 text-primary"></i>2. Finalidad del Tratamiento</h5>
-            <p class="text-justify text-muted">
-                Sus datos personales serán utilizados exclusivamente para las siguientes finalidades:
-                <ul class="text-muted">
-                    <li>Gestión y administración de las pólizas de seguro contratadas.</li>
-                    <li>Emisión de facturas y gestión de cobros.</li>
-                    <li>Gestión de siniestros y asistencia técnica.</li>
-                    <li>Envío de comunicaciones relacionadas con el servicio (renovaciones, avisos importantes).</li>
-                </ul>
-            </p>
-
-            <h5 class="fw-bold mt-4"><i class="fa-solid fa-scale-balanced me-2 text-primary"></i>3. Legitimación</h5>
-            <p class="text-justify text-muted">
-                La base legal para el tratamiento de sus datos es la <strong>ejecución del contrato</strong> de seguro del que usted es parte.
-            </p>
-
-            <h5 class="fw-bold mt-4"><i class="fa-solid fa-user-lock me-2 text-primary"></i>4. Destinatarios</h5>
-            <p class="text-justify text-muted">
-                Sus datos no serán cedidos a terceros, salvo obligación legal (Agencia Tributaria, Jueces y Tribunales) o proveedores de servicios necesarios para la prestación del servicio (servicios de hosting, pasarelas de pago), siempre bajo estrictos contratos de confidencialidad.
-            </p>
-
-            <h5 class="fw-bold mt-4"><i class="fa-solid fa-hand-holding-heart me-2 text-primary"></i>5. Derechos del Usuario (ARCO)</h5>
-            <p class="text-justify text-muted">
-                Como titular de los datos, usted tiene derecho a:
-                <ul class="text-muted">
-                    <li><strong>Acceder</strong> a sus datos personales.</li>
-                    <li>Solicitar la <strong>rectificación</strong> de los datos inexactos.</li>
-                    <li>Solicitar su <strong>supresión</strong> cuando, entre otros motivos, los datos ya no sean necesarios para los fines que fueron recogidos.</li>
-                    <li>Oponerse al tratamiento de sus datos.</li>
-                </ul>
-                Puede ejercer estos derechos enviando una solicitud por escrito a nuestra dirección de contacto.
-            </p>
-
-            <hr class="my-5">
-
-            <div class="text-center text-muted small">
-                <p class="mb-1"><strong>&copy; ${year} Aseguradora App S.L.</strong> Todos los derechos reservados.</p>
-                <p>Inscrita en el Registro Mercantil de Madrid, Tomo 1234, Folio 56, Hoja M-12345.</p>
-                <div class="mt-3">
-                    <a href="#" class="text-decoration-none me-3">Términos de Uso</a> |
-                    <a href="#" class="text-decoration-none mx-3">Política de Cookies</a> | 
-                    <a href="#" class="text-decoration-none ms-3">Aviso Legal</a>
-                </div>
-            </div>
-        </div>
-    </div>`;
-}
 
 // =========================================================
-// 5. FUNCIONES DE SISTEMA (BORRAR, IMPRIMIR, CREAR)
+// 6. LÓGICA DE BORRADO Y UTILIDADES
 // =========================================================
-
-// =========================================================
-// 7. LÓGICA DE BORRADO V2 (Renombrada para evitar caché)
-// =========================================================
-let modalBorrado;      
-// Nombres nuevos para evitar conflictos
-var borrado_V2_Tipo = "";
-var borrado_V2_Id = 0;
-
-// A. Función llamada al hacer clic en la papelera
 function solicitarBorrado_V2(tipoTexto, idNumero) {
-    console.log("--> FASE 1: Click recibido V2. Tipo:", tipoTexto, "ID:", idNumero);
-
-    // Validación inmediata
-    if (!tipoTexto || !idNumero || idNumero === 0) {
-        alert("Error: Datos incorrectos (ID es 0 o Tipo vacío).");
-        return;
-    }
-
-    // Guardamos en las variables NUEVAS
-    borrado_V2_Tipo = tipoTexto;
-    borrado_V2_Id = idNumero;
-    
-    // Abrimos el modal
+    if (!tipoTexto || !idNumero || idNumero === 0) { alert("Error ID"); return; }
+    borrado_V2_Tipo = tipoTexto; borrado_V2_Id = idNumero;
     if (!modalBorrado) modalBorrado = new bootstrap.Modal(document.getElementById('modalBorrado'));
-    
-    // Reseteamos el input
-    const input = document.getElementById('inputBorradoConfirm');
-    const btn = document.getElementById('btnBorrarFinal');
-    
-    if(input) {
-        input.value = "";
-        setTimeout(() => input.focus(), 500);
-    }
+    const input = document.getElementById('inputBorradoConfirm'); const btn = document.getElementById('btnBorrarFinal');
+    if(input) { input.value = ""; setTimeout(() => input.focus(), 500); }
     if(btn) btn.disabled = true;
-    
     modalBorrado.show();
 }
-
-// B. Verificar texto
 function verificarTextoBorrado_V2() {
     const texto = document.getElementById('inputBorradoConfirm').value;
     const btn = document.getElementById('btnBorrarFinal');
     if(btn) btn.disabled = (texto !== "ELIMINAR");
 }
-
-// C. Ejecutar el borrado real
 async function ejecutarBorrado_V2() {
-    // Recuperamos de las variables NUEVAS
-    const tipo = borrado_V2_Tipo;
-    const id = borrado_V2_Id;
-    
-    console.log("--> FASE 2: Ejecutando borrado V2 para:", tipo, id);
-
-    // ESCUDO DE SEGURIDAD
-    if (!tipo || id === 0) {
-        alert("¡ALTO! Las variables se han perdido. Intenta recargar la página (F5).");
-        if(modalBorrado) modalBorrado.hide();
-        return;
-    }
-
-    const urlBorrado = API_URL + "/" + tipo + "/" + id;
-    const btn = document.getElementById('btnBorrarFinal');
-    if(btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
+    const tipo = borrado_V2_Tipo; const id = borrado_V2_Id;
+    if (!tipo || id === 0) { alert("Error variables"); if(modalBorrado) modalBorrado.hide(); return; }
+    const btn = document.getElementById('btnBorrarFinal'); if(btn) btn.innerHTML = 'Borrando...';
     try {
-        const res = await fetch(urlBorrado, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-
+        const res = await fetch(`${API_URL}/${tipo}/${id}`, { method: 'DELETE', credentials: 'include' });
         if (res.ok) {
-            if(modalBorrado) modalBorrado.hide();
-            mostrarPopup("Registro eliminado correctamente.");
-            cargarSeccion(tipo); 
+            if(modalBorrado) modalBorrado.hide(); mostrarPopup("Registro eliminado."); cargarSeccion(tipo);
         } else {
             const texto = await res.text();
-            alert("Error del servidor: " + texto);
+            if (res.status === 409 || res.status === 500) {
+                if (texto.includes("constraint") || texto.includes("foreign key")) mostrarPopup("💡 No se puede eliminar la póliza todavía.\n\nPrimero debes eliminar las FACTURAS o SINIESTROS asociados a ella.");
+                else mostrarPopup("El servidor no pudo borrar el elemento. Inténtalo más tarde.");
+            } else mostrarPopup("No se pudo completar la acción.");
         }
-    } catch (error) {
-        alert("Error de conexión: " + error.message);
-    } finally {
-        if(btn) btn.innerHTML = 'Confirmar Eliminación';
-        if(modalBorrado) modalBorrado.hide();
-    }
-}
-// NUEVA FUNCIÓN: CREAR USUARIO DESDE MODAL
-async function crearUsuarioNuevo(e) {
-    e.preventDefault();
-    const nombre = document.getElementById('newUserName').value;
-    const correo = document.getElementById('newUserEmail').value;
-    const password = document.getElementById('newUserPass').value;
-    const rol = document.getElementById('newUserRol').value;
-
-    const nuevoUsuario = { nombreCompleto: nombre, correo, password, rol, activo: true };
-
-    try {
-        const res = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify(nuevoUsuario)
-        });
-
-        if(res.ok) {
-            modalCrearUser.hide();
-            mostrarPopup("Usuario creado con éxito.");
-            document.getElementById('formCrearUsuario').reset();
-            cargarSeccion('usuarios'); 
-        } else {
-            const txt = await res.text();
-            mostrarPopup("Error al crear usuario: " + txt);
-        }
-    } catch(err) {
-        mostrarPopup("Error de conexión.");
-    }
+    } catch (error) { alert("Error conexión."); } finally { if(btn) btn.innerHTML = 'Confirmar Eliminación'; }
 }
 
-// --- FUNCIÓN 1: MODIFICADA PARA MOSTRAR BOTONES DE PDF ---
-function prepararFactura(factura) {
-    const contenidoFactura = `
-        <div id="facturaImprimible" class="p-5 bg-white border">
-            <div class="d-flex justify-content-between mb-4">
-                <div>
-                    <h2 class="fw-bold text-primary">FACTURA</h2>
-                    <p class="text-muted mb-0">Aseguradora App S.L.</p>
-                </div>
-                <div class="text-end">
-                    <h5 class="text-dark">Ref: INV-${factura.idFactura}</h5>
-                    <p class="text-muted">${factura.fechaEmision}</p>
-                </div>
-            </div>
-            <hr>
-            <div class="row mb-5">
-                <div class="col-6">
-                    <h6 class="fw-bold">Cliente:</h6>
-                    <p class="mb-0">${usuario.nombreCompleto}</p>
-                    <p class="mb-0">${usuario.correo}</p>
-                </div>
-            </div>
-            <table class="table table-bordered">
-                <thead class="table-light">
-                    <tr><th>Concepto</th><th class="text-end">Importe</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td class="p-3">${factura.concepto}</td><td class="text-end p-3 fw-bold">${factura.importe} €</td></tr>
-                </tbody>
-                <tfoot>
-                    <tr class="table-secondary"><th class="text-end">TOTAL</th><th class="text-end fs-4">${factura.importe} €</th></tr>
-                </tfoot>
-            </table>
-        </div>`;
-    document.getElementById('areaImpresion').innerHTML = contenidoFactura;
+// RESTO DE RENDERIZADORES AUXILIARES
+function renderizarFormularioAlta(tipos, listaUsuarios, contenedor) {
+    let optsTipos = `<option value="" disabled selected>-- Seleccione Tipo --</option>`;
+    tipos.forEach(t => optsTipos += `<option value="${t.idTipo}">${t.nombre} (${t.precioBase}€)</option>`);
+    let optsUsuarios = `<option value="" disabled selected>-- Seleccione Cliente --</option>`;
+    listaUsuarios.forEach(u => { optsUsuarios += `<option value="${u.idUsuario}">${u.nombreCompleto} (${u.rol})</option>`; });
+    const poliza = 'POL-' + Math.floor(Math.random()*99999);
+    
+    contenedor.innerHTML = `
+    <h3 class="mb-4">Contratar Nuevo Seguro</h3>
+    <div class="card shadow-sm border-0" style="max-width: 700px;"><div class="card-body p-4"><form id="formAlta">
+        <div class="mb-3"><label class="fw-bold">Cliente</label><select id="idClienteAsignado" class="form-select" required>${optsUsuarios}</select></div>
+        <div class="row mb-3"><div class="col"><label class="fw-bold">Tipo</label><select id="idTipo" class="form-select" required>${optsTipos}</select></div>
+        <div class="col"><label class="fw-bold">Póliza</label><input id="numPoliza" class="form-control bg-light" value="${poliza}" readonly></div></div>
+        <div class="row mb-3"><div class="col"><label>Inicio</label><input type="date" id="fInicio" class="form-control" required></div>
+        <div class="col"><label>Renovación</label><input type="date" id="fRenov" class="form-control" required></div></div>
+        <div class="mb-3"><label class="fw-bold">Detalles</label><textarea id="detalles" class="form-control" required></textarea></div>
+        <div class="mb-3"><label class="fw-bold">Precio (€)</label><input type="number" id="precio" class="form-control" required></div>
+        <button type="submit" class="btn btn-primary w-100">Crear Póliza</button>
+    </form></div></div>`;
+    
+    const iIni = document.getElementById('fInicio'); const iRen = document.getElementById('fRenov');
+    if(iIni && iRen) iIni.addEventListener('change', () => { if (iIni.value) { const d = new Date(iIni.value); d.setFullYear(d.getFullYear() + 1); iRen.value = d.toISOString().split('T')[0]; }});
+    
+    document.getElementById('formAlta').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const d = { numPoliza: document.getElementById('numPoliza').value, fechaInicio: document.getElementById('fInicio').value, fechaRenovacion: document.getElementById('fRenov').value, primaAnual: parseFloat(document.getElementById('precio').value), datosEspecificos: document.getElementById('detalles').value, estado: "ACTIVO", usuario: { idUsuario: document.getElementById('idClienteAsignado').value }, tipoSeguro: { idTipo: document.getElementById('idTipo').value } };
+        try { const r = await fetch(`${API_URL}/seguros`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials: 'include', body:JSON.stringify(d) }); if(r.ok){ mostrarPopup("¡Póliza creada!"); cargarSeccion('mis-seguros'); } else mostrarPopup("Error al guardar."); } catch(e){ mostrarPopup("Error conexión."); }
+    });
+}
 
-    const footerModal = document.getElementById('printModal').querySelector('.modal-footer');
-    footerModal.innerHTML = `
+function renderizarConfiguracion(c) {
+    let botonHtml = usuario.twoFactorEnabled ? `<div class="alert alert-success mb-3">2FA Activado</div><button class="btn btn-outline-danger w-100" onclick="desactivar2FA()">Desactivar 2FA</button>` : `<button class="btn btn-primary w-100" onclick="iniciarSetup2FA()">Activar 2FA</button>`;
+    c.innerHTML = `<h3 class="mb-4">Configuración</h3><div class="row justify-content-center"><div class="col-md-8"><div class="card shadow border-0"><div class="card-body p-5 text-center"><i class="fa-solid fa-mobile-screen-button text-primary fa-4x mb-4"></i><h4>Seguridad 2FA</h4><div class="mt-2">${botonHtml}</div></div></div></div></div>`;
+}
+
+function renderizarPerfil(c) {
+    c.innerHTML = `<h3 class="mb-4">Perfil</h3><div class="card p-4 border-0 shadow-sm" style="max-width: 500px"><form id="formPerfil"><div class="mb-3"><label>Nombre</label><input id="pN" class="form-control" value="${usuario.nombreCompleto}"></div><div class="mb-3"><label>Email</label><input class="form-control bg-light" value="${usuario.correo}" disabled></div><div class="mb-3"><label>Móvil</label><input id="pM" class="form-control" value="${usuario.movil||''}"></div><button type="submit" class="btn btn-primary w-100">Guardar</button></form></div>`;
+    document.getElementById('formPerfil').addEventListener('submit', async(e)=>{ e.preventDefault(); try { const res = await fetch(`${API_URL}/usuarios/${usuario.idUsuario}`, { method:'PUT', headers:{'Content-Type':'application/json'}, credentials: 'include', body:JSON.stringify({...usuario, nombreCompleto:document.getElementById('pN').value, movil:document.getElementById('pM').value})}); if(res.ok){ usuario=await res.json(); sessionStorage.setItem('usuario',JSON.stringify(usuario)); document.getElementById('nombreUsuarioDisplay').textContent=usuario.nombreCompleto; mostrarPopup("Actualizado."); } } catch(e){mostrarPopup("Error.");} });
+}
+
+function renderizarAyuda(contenedor) {
+    contenedor.innerHTML = `
+    <h3 class="mb-4">Centro de Ayuda y Soporte</h3>
+    <div class="row">
+        <div class="col-md-6 mb-4"><div class="card shadow-sm border-0 h-100"><div class="card-body">
+            <h5 class="fw-bold text-primary mb-3">Envíanos tu consulta</h5>
+            <form id="formAyuda">
+                <div class="mb-3"><label class="form-label">Asunto</label><select class="form-select" required><option>Duda Póliza</option><option>Problema Factura</option><option>Otro</option></select></div>
+                <div class="mb-3"><label class="form-label">Mensaje</label><textarea class="form-control" rows="4" required placeholder="Describe tu consulta..."></textarea></div>
+                <button type="submit" class="btn btn-primary w-100">Enviar</button>
+            </form>
+        </div></div></div>
+        <div class="col-md-6 mb-4"><div class="card bg-light border-0 h-100"><div class="card-body">
+            <h5><i class="fa-solid fa-circle-question me-2"></i>Preguntas Frecuentes</h5>
+            <div class="accordion mt-3" id="faqAcc">
+                <div class="accordion-item mb-2 border-0 shadow-sm"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q1">No puedo borrar un seguro</button></h2>
+                <div id="q1" class="accordion-collapse collapse" data-bs-parent="#faqAcc"><div class="accordion-body text-muted small">Debes cancelar primero la factura asociada.</div></div></div>
+                <div class="accordion-item mb-2 border-0 shadow-sm"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q2">¿Cómo descargar facturas?</button></h2>
+                <div id="q2" class="accordion-collapse collapse" data-bs-parent="#faqAcc"><div class="accordion-body text-muted small">Ve a la sección Facturas y pulsa el botón azul.</div></div></div>
+                 <div class="accordion-item mb-2 border-0 shadow-sm"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q3">¿Dónde veo la información de la empresa?</button></h2>
+                <div id="q3" class="accordion-collapse collapse" data-bs-parent="#faqAcc"><div class="accordion-body text-muted small">Haz clic en el botón 'Info Empresa' en el menú lateral.</div></div></div>
+            </div>
+        </div></div></div>
+    </div>`;
+    document.getElementById('formAyuda').addEventListener('submit', (e) => { e.preventDefault(); mostrarPopup("Mensaje enviado. Contactaremos contigo pronto."); e.target.reset(); });
+}
+
+function renderizarPrivacidad(contenedor) {
+    const year = new Date().getFullYear();
+    contenedor.innerHTML = `
+    <h3 class="mb-4">Política de Privacidad y Aviso Legal</h3>
+    <div class="card shadow-sm border-0"><div class="card-body p-5">
+        <div class="text-center mb-5"><div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-weight: bold; font-size: 24px;">A</div>
+        <h2 class="fw-bold text-dark">Aseguradora App</h2><p class="text-muted">Comprometidos con la transparencia y tu seguridad.</p></div>
+
+        <h5 class="fw-bold mt-4"><i class="fa-solid fa-building-shield me-2 text-primary"></i>1. Responsable del Tratamiento</h5>
+        <p class="text-justify text-muted"><strong>Aseguradora App S.L.</strong>, con domicilio en Calle Mayor 123, Madrid, España, es la responsable del tratamiento de sus datos personales. Puede contactar con nuestro Delegado de Protección de Datos (DPO) en <strong>dpo@aseguradora.com</strong>.</p>
+
+        <h5 class="fw-bold mt-4"><i class="fa-solid fa-file-contract me-2 text-primary"></i>2. Finalidad del Tratamiento</h5>
+        <p class="text-justify text-muted">Sus datos personales serán utilizados exclusivamente para las siguientes finalidades:
+            <ul class="text-muted">
+                <li>Gestión y administración de las pólizas de seguro contratadas.</li>
+                <li>Emisión de facturas y gestión de cobros.</li>
+                <li>Gestión de siniestros y asistencia técnica.</li>
+                <li>Envío de comunicaciones relacionadas con el servicio (renovaciones, avisos importantes).</li>
+            </ul>
+        </p>
+
+        <h5 class="fw-bold mt-4"><i class="fa-solid fa-scale-balanced me-2 text-primary"></i>3. Legitimación</h5>
+        <p class="text-justify text-muted">La base legal para el tratamiento de sus datos es la <strong>ejecución del contrato</strong> de seguro del que usted es parte.</p>
+
+        <h5 class="fw-bold mt-4"><i class="fa-solid fa-user-lock me-2 text-primary"></i>4. Destinatarios</h5>
+        <p class="text-justify text-muted">Sus datos no serán cedidos a terceros, salvo obligación legal (Agencia Tributaria, Jueces y Tribunales) o proveedores de servicios necesarios para la prestación del servicio (servicios de hosting, pasarelas de pago), siempre bajo estrictos contratos de confidencialidad.</p>
+
+        <h5 class="fw-bold mt-4"><i class="fa-solid fa-hand-holding-heart me-2 text-primary"></i>5. Derechos del Usuario (ARCO)</h5>
+        <p class="text-justify text-muted">Como titular de los datos, usted tiene derecho a:
+            <ul class="text-muted">
+                <li><strong>Acceder</strong> a sus datos personales.</li>
+                <li>Solicitar la <strong>rectificación</strong> de los datos inexactos.</li>
+                <li>Solicitar su <strong>supresión</strong> cuando, entre otros motivos, los datos ya no sean necesarios para los fines que fueron recogidos.</li>
+                <li>Oponerse al tratamiento de sus datos.</li>
+            </ul>
+            Puede ejercer estos derechos enviando una solicitud por escrito a nuestra dirección de contacto.
+        </p>
+        <hr class="my-5">
+        <div class="text-center text-muted small"><p class="mb-1"><strong>&copy; ${year} Aseguradora App S.L.</strong> Todos los derechos reservados.</p>
+        <p>Inscrita en el Registro Mercantil de Madrid, Tomo 1234, Folio 56, Hoja M-12345.</p></div>
+    </div></div>`;
+}
+
+// UTILIDADES FINALES
+async function crearUsuarioNuevo(e) { e.preventDefault(); const d = { nombreCompleto: document.getElementById('newUserName').value, correo: document.getElementById('newUserEmail').value, password: document.getElementById('newUserPass').value, rol: document.getElementById('newUserRol').value, activo: true }; try { const res = await fetch(`${API_URL}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(d) }); if(res.ok) { modalCrearUser.hide(); mostrarPopup("Creado."); cargarSeccion('usuarios'); } } catch(err) {} }
+function prepararFactura(f) { 
+    const contenido = `
+    <div id="facturaImprimible" class="p-5 bg-white border">
+        <div class="d-flex justify-content-between mb-4">
+            <div><h2 class="fw-bold text-primary">FACTURA</h2><p class="text-muted mb-0">Aseguradora App S.L.</p></div>
+            <div class="text-end"><h5 class="text-dark">Ref: INV-${f.idFactura}</h5><p class="text-muted">${f.fechaEmision}</p></div>
+        </div>
+        <hr>
+        <div class="row mb-5"><div class="col-6"><h6 class="fw-bold">Cliente:</h6><p class="mb-0">${usuario.nombreCompleto}</p><p class="mb-0">${usuario.correo}</p></div></div>
+        <table class="table table-bordered"><thead class="table-light"><tr><th>Concepto</th><th class="text-end">Importe</th></tr></thead>
+        <tbody><tr><td class="p-3">${f.concepto}</td><td class="text-end p-3 fw-bold">${f.importe} €</td></tr></tbody>
+        <tfoot><tr class="table-secondary"><th class="text-end">TOTAL</th><th class="text-end fs-4">${f.importe} €</th></tr></tfoot></table>
+    </div>`;
+    document.getElementById('areaImpresion').innerHTML = contenido;
+    // Configurar botones del modal
+    const footer = document.getElementById('printModal').querySelector('.modal-footer');
+    footer.innerHTML = `
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
         <button type="button" class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir</button>
-        <button type="button" class="btn btn-success" onclick="descargarPDF(${factura.idFactura})"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
+        <button type="button" class="btn btn-success" onclick="descargarPDF(${f.idFactura})"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
     `;
-    modalPrint.show();
+    modalPrint.show(); 
 }
-
-function descargarPDF(id) {
-    const elemento = document.getElementById('facturaImprimible');
-    if (!elemento || typeof html2pdf === 'undefined') {
-        alert("Error: Librería PDF no cargada.");
-        return;
-    }
-    const opciones = {
-        margin:       10,
-        filename:     `Factura_${id}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().set(opciones).from(elemento).save();
+function descargarPDF(id) { 
+    const element = document.getElementById('facturaImprimible');
+    if(!element || typeof html2pdf === 'undefined') { alert("Error PDF"); return; }
+    html2pdf().set({ margin: 10, filename: `Factura_${id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(element).save();
 }
-// =========================================================
-// 6. LÓGICA 2FA (SETUP Y CONFIRMACIÓN)
-// =========================================================
-let modal2FA; // Variable global para controlar la ventana
-
-async function iniciarSetup2FA() {
-    // Inicializar el modal de Bootstrap si no existe aún
-    if (!modal2FA) modal2FA = new bootstrap.Modal(document.getElementById('modal2FA'));
-    
-    try {
-        // 1. Pedir al servidor que genere un secreto y la URL del QR
-        const res = await fetch(`${API_URL}/auth/setup-2fa`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ correo: usuario.correo })
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            
-            // 2. Limpiar el contenedor del QR anterior (si había)
-            document.getElementById('qrContainer').innerHTML = ""; 
-            
-            // 3. Dibujar el nuevo QR usando la librería que pusimos en el HTML
-            new QRCode(document.getElementById("qrContainer"), {
-                text: data.qrUrl,
-                width: 150,
-                height: 150
-            });
-            
-            // 4. Mostrar la ventana
-            modal2FA.show();
-        } else {
-            mostrarPopup("Error al iniciar configuración 2FA");
-        }
-    } catch (e) {
-        console.error(e);
-        mostrarPopup("Error de conexión");
-    }
-}
-
-async function confirmarActivacion2FA() {
-    // Leemos el código que ha escrito el usuario
-    const codigo = document.getElementById('inputCodeConfirm').value;
-    
-    if (codigo.length !== 6) {
-        alert("El código debe tener 6 dígitos");
-        return;
-    }
-
-    try {
-        // Enviamos el código al servidor para confirmar
-        const res = await fetch(`${API_URL}/auth/confirm-2fa`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ correo: usuario.correo, codigo: codigo })
-        });
-
-        if (res.ok) {
-            modal2FA.hide(); // Cerramos ventana
-            mostrarPopup("¡Éxito! 2FA Activado correctamente.");
-            
-            // Actualizamos la memoria del navegador para saber que ya está activado
-            usuario.twoFactorEnabled = true;
-            sessionStorage.setItem('usuario', JSON.stringify(usuario));
-            
-            // Recargamos la sección para que se vea el botón verde
-            renderizarConfiguracion(document.getElementById('contenido-dinamico'));
-        } else {
-            alert("Código incorrecto. Inténtalo de nuevo.");
-        }
-    } catch (e) {
-        mostrarPopup("Error al confirmar.");
-    }
-}
-async function desactivar2FA() {
-    // Pedimos confirmación para evitar clics accidentales
-    if (!confirm("¿Seguro que quieres eliminar la protección de doble factor? Tu cuenta será menos segura.")) {
-        return;
-    }
-
-    try {
-        const res = await fetch(`${API_URL}/auth/disable-2fa`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ correo: usuario.correo })
-        });
-
-        if (res.ok) {
-            mostrarPopup("Has desactivado la autenticación en dos pasos.");
-            
-            // Actualizamos la memoria del navegador
-            usuario.twoFactorEnabled = false;
-            sessionStorage.setItem('usuario', JSON.stringify(usuario));
-            
-            // Recargamos la pantalla para ver el botón azul de nuevo
-            renderizarConfiguracion(document.getElementById('contenido-dinamico'));
-        } else {
-            mostrarPopup("Error al desactivar.");
-        }
-    } catch (e) {
-        console.error(e);
-        mostrarPopup("Error de conexión.");
-    }
-}
-
+async function iniciarSetup2FA() { const res = await fetch(`${API_URL}/auth/setup-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo})}); if(res.ok){ const d=await res.json(); document.getElementById('qrContainer').innerHTML=""; new QRCode(document.getElementById('qrContainer'), d.qrUrl); modal2FA.show(); } }
+async function confirmarActivacion2FA() { const c = document.getElementById('inputCodeConfirm').value; const res = await fetch(`${API_URL}/auth/confirm-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo, codigo:c})}); if(res.ok){ modal2FA.hide(); usuario.twoFactorEnabled=true; sessionStorage.setItem('usuario', JSON.stringify(usuario)); renderizarConfiguracion(document.getElementById('contenido-dinamico')); } }
+async function desactivar2FA() { if(confirm("¿Quitar 2FA?")) { const res = await fetch(`${API_URL}/auth/disable-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo})}); if(res.ok){ usuario.twoFactorEnabled=false; sessionStorage.setItem('usuario', JSON.stringify(usuario)); renderizarConfiguracion(document.getElementById('contenido-dinamico')); } } }
 function renderizarCargando(c, t) { c.innerHTML = `<div class="text-center mt-5"><div class="spinner-border text-primary"></div><p>${t}</p></div>`; }
-function mostrarError(c) { c.innerHTML = '<div class="alert alert-danger">Error de conexión con el servidor.</div>'; }
-function mostrarPopup(msg) { document.getElementById('modalMensaje').textContent = msg; modalInfo.show(); }
+function mostrarError(c) { c.innerHTML = '<div class="alert alert-danger">Error.</div>'; }
+function mostrarPopup(msg) { document.getElementById('modalMensaje').innerText = msg; modalInfo.show(); }
 function logout() { sessionStorage.removeItem('usuario'); window.location.href = 'index.html'; }
 --- styles.css ---
 /* Layout Global */

@@ -41,7 +41,7 @@ if (!usuarioGuardado) {
         if(document.getElementById('modalBorrado')) modalBorrado = new bootstrap.Modal(document.getElementById('modalBorrado'));
         if(document.getElementById('modal2FA')) modal2FA = new bootstrap.Modal(document.getElementById('modal2FA'));
         if(document.getElementById('empresaModal')) modalEmpresa = new bootstrap.Modal(document.getElementById('empresaModal'));
-        
+        if(document.getElementById('confirmModal')) modalConfirm = new bootstrap.Modal(document.getElementById('confirmModal'));
         // Modales de Edición
         if(document.getElementById('modalEditarUsuario')) modalEditarUser = new bootstrap.Modal(document.getElementById('modalEditarUsuario'));
         if(document.getElementById('modalEditarSiniestro')) modalEditarSin = new bootstrap.Modal(document.getElementById('modalEditarSiniestro'));
@@ -544,7 +544,13 @@ function renderizarFormularioAlta(tipos, listaUsuarios, contenedor) {
 }
 
 function renderizarConfiguracion(c) {
-    let botonHtml = usuario.twoFactorEnabled ? `<div class="alert alert-success mb-3">2FA Activado</div><button class="btn btn-outline-danger w-100" onclick="desactivar2FA()">Desactivar 2FA</button>` : `<button class="btn btn-primary w-100" onclick="iniciarSetup2FA()">Activar 2FA</button>`;
+    let botonHtml = usuario.twoFactorEnabled ?
+        // AQUÍ ESTÁ EL CAMBIO: onclick="solicitarDesactivar2FA()"
+        `<div class="alert alert-success mb-3 shadow-sm"><i class="fa-solid fa-shield-check me-2"></i>2FA Activado</div>
+         <button class="btn btn-outline-danger w-100" onclick="solicitarDesactivar2FA()">Desactivar 2FA</button>` 
+        : 
+        `<button class="btn btn-primary w-100" onclick="iniciarSetup2FA()">Activar 2FA</button>`;
+        
     c.innerHTML = `<h3 class="mb-4">Configuración</h3><div class="row justify-content-center"><div class="col-md-8"><div class="card shadow border-0"><div class="card-body p-5 text-center"><i class="fa-solid fa-mobile-screen-button text-primary fa-4x mb-4"></i><h4>Seguridad 2FA</h4><div class="mt-2">${botonHtml}</div></div></div></div></div>`;
 }
 
@@ -586,10 +592,10 @@ function renderizarPrivacidad(contenedor) {
     <h3 class="mb-4">Política de Privacidad y Aviso Legal</h3>
     <div class="card shadow-sm border-0"><div class="card-body p-5">
         <div class="text-center mb-5"><div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-weight: bold; font-size: 24px;">A</div>
-        <h2 class="fw-bold text-dark">Aseguradora App</h2><p class="text-muted">Comprometidos con la transparencia y tu seguridad.</p></div>
+        <h2 class="fw-bold text-dark">LEIGSeguros</h2><p class="text-muted">Comprometidos con la transparencia y tu seguridad.</p></div>
 
         <h5 class="fw-bold mt-4"><i class="fa-solid fa-building-shield me-2 text-primary"></i>1. Responsable del Tratamiento</h5>
-        <p class="text-justify text-muted"><strong>Aseguradora App S.L.</strong>, con domicilio en Calle Mayor 123, Madrid, España, es la responsable del tratamiento de sus datos personales. Puede contactar con nuestro Delegado de Protección de Datos (DPO) en <strong>dpo@aseguradora.com</strong>.</p>
+        <p class="text-justify text-muted"><strong>LEIGSeguros S.L.</strong>, con domicilio en Calle Mayor 123, Madrid, España, es la responsable del tratamiento de sus datos personales. Puede contactar con nuestro Delegado de Protección de Datos (DPO) en <strong>aseguradoraleig@gmail.com</strong>.</p>
 
         <h5 class="fw-bold mt-4"><i class="fa-solid fa-file-contract me-2 text-primary"></i>2. Finalidad del Tratamiento</h5>
         <p class="text-justify text-muted">Sus datos personales serán utilizados exclusivamente para las siguientes finalidades:
@@ -618,7 +624,7 @@ function renderizarPrivacidad(contenedor) {
             Puede ejercer estos derechos enviando una solicitud por escrito a nuestra dirección de contacto.
         </p>
         <hr class="my-5">
-        <div class="text-center text-muted small"><p class="mb-1"><strong>&copy; ${year} Aseguradora App S.L.</strong> Todos los derechos reservados.</p>
+        <div class="text-center text-muted small"><p class="mb-1"><strong>&copy; ${year} LEIGSeguros S.L.</strong> Todos los derechos reservados.</p>
         <p>Inscrita en el Registro Mercantil de Madrid, Tomo 1234, Folio 56, Hoja M-12345.</p></div>
     </div></div>`;
 }
@@ -629,7 +635,7 @@ function prepararFactura(f) {
     const contenido = `
     <div id="facturaImprimible" class="p-5 bg-white border">
         <div class="d-flex justify-content-between mb-4">
-            <div><h2 class="fw-bold text-primary">FACTURA</h2><p class="text-muted mb-0">Aseguradora App S.L.</p></div>
+            <div><h2 class="fw-bold text-primary">FACTURA</h2><p class="text-muted mb-0"> LEIGSeguros S.L.</p></div>
             <div class="text-end"><h5 class="text-dark">Ref: INV-${f.idFactura}</h5><p class="text-muted">${f.fechaEmision}</p></div>
         </div>
         <hr>
@@ -653,9 +659,59 @@ function descargarPDF(id) {
     if(!element || typeof html2pdf === 'undefined') { alert("Error PDF"); return; }
     html2pdf().set({ margin: 10, filename: `Factura_${id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(element).save();
 }
+// Función 1: Abre el modal y prepara el botón
+function solicitarDesactivar2FA() {
+    const modalEl = document.getElementById('confirmModal');
+    const btnConfirmar = document.getElementById('btnConfirmarBorrado');
+    
+    // 1. Cambiamos los textos del Modal para que no parezca de borrar
+    modalEl.querySelector('.modal-header').classList.replace('bg-danger', 'bg-warning'); // Color amarillo advertencia
+    modalEl.querySelector('.modal-title').textContent = "Desactivar Seguridad";
+    modalEl.querySelector('.modal-body i').className = "fa-solid fa-shield-slash text-warning fa-3x mb-3"; // Icono escudo roto
+    modalEl.querySelector('.modal-body p.fw-bold').textContent = "¿Seguro que quieres quitar el 2FA?";
+    modalEl.querySelector('.modal-body p.small').textContent = "Tu cuenta será menos segura sin la verificación en dos pasos.";
+    
+    // 2. Configuramos el botón "Sí"
+    btnConfirmar.className = "btn btn-warning fw-bold";
+    btnConfirmar.textContent = "Sí, Desactivar";
+    
+    // 3. Le asignamos la acción de borrar al hacer click
+    btnConfirmar.onclick = function() {
+        modalConfirm.hide();
+        ejecutarDesactivacionReal(); // Llamamos a la función real
+    };
+
+    // 4. Mostramos el modal
+    modalConfirm.show();
+}
+
+// Función 2: La que llama a la API (Backend)
+async function ejecutarDesactivacionReal() {
+    try {
+        const res = await fetch(`${API_URL}/auth/disable-2fa`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({correo: usuario.correo})
+        });
+
+        if(res.ok){
+            usuario.twoFactorEnabled = false;
+            sessionStorage.setItem('usuario', JSON.stringify(usuario));
+            
+            // Recargamos la vista para que salga el botón azul de "Activar"
+            renderizarConfiguracion(document.getElementById('contenido-dinamico'));
+            
+            // Restauramos el estilo del modal (opcional, por limpieza) y avisamos
+            mostrarPopup("Autenticación en dos pasos desactivada.");
+        } else {
+            mostrarPopup("No se pudo desactivar. Inténtalo de nuevo.");
+        }
+    } catch(e) {
+        mostrarPopup("Error de conexión con el servidor.");
+    }
+}
 async function iniciarSetup2FA() { const res = await fetch(`${API_URL}/auth/setup-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo})}); if(res.ok){ const d=await res.json(); document.getElementById('qrContainer').innerHTML=""; new QRCode(document.getElementById('qrContainer'), d.qrUrl); modal2FA.show(); } }
 async function confirmarActivacion2FA() { const c = document.getElementById('inputCodeConfirm').value; const res = await fetch(`${API_URL}/auth/confirm-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo, codigo:c})}); if(res.ok){ modal2FA.hide(); usuario.twoFactorEnabled=true; sessionStorage.setItem('usuario', JSON.stringify(usuario)); renderizarConfiguracion(document.getElementById('contenido-dinamico')); } }
-async function desactivar2FA() { if(confirm("¿Quitar 2FA?")) { const res = await fetch(`${API_URL}/auth/disable-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo})}); if(res.ok){ usuario.twoFactorEnabled=false; sessionStorage.setItem('usuario', JSON.stringify(usuario)); renderizarConfiguracion(document.getElementById('contenido-dinamico')); } } }
 function renderizarCargando(c, t) { c.innerHTML = `<div class="text-center mt-5"><div class="spinner-border text-primary"></div><p>${t}</p></div>`; }
 function mostrarError(c) { c.innerHTML = '<div class="alert alert-danger">Error.</div>'; }
 function mostrarPopup(msg) { document.getElementById('modalMensaje').innerText = msg; modalInfo.show(); }

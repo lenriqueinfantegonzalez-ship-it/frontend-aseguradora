@@ -34,14 +34,15 @@ if (!usuarioGuardado) {
             });
         }
 
-        // Inicializar Modales de Bootstrap (Verificando que existan)
+        // Inicializar Modales de Bootstrap
         if(document.getElementById('infoModal')) modalInfo = new bootstrap.Modal(document.getElementById('infoModal'));
         if(document.getElementById('printModal')) modalPrint = new bootstrap.Modal(document.getElementById('printModal'));
         if(document.getElementById('modalCrearUsuario')) modalCrearUser = new bootstrap.Modal(document.getElementById('modalCrearUsuario'));
         if(document.getElementById('modalBorrado')) modalBorrado = new bootstrap.Modal(document.getElementById('modalBorrado'));
         if(document.getElementById('modal2FA')) modal2FA = new bootstrap.Modal(document.getElementById('modal2FA'));
+        if(document.getElementById('empresaModal')) modalEmpresa = new bootstrap.Modal(document.getElementById('empresaModal'));
         
-        // Nuevos Modales de Edición
+        // Modales de Edición
         if(document.getElementById('modalEditarUsuario')) modalEditarUser = new bootstrap.Modal(document.getElementById('modalEditarUsuario'));
         if(document.getElementById('modalEditarSiniestro')) modalEditarSin = new bootstrap.Modal(document.getElementById('modalEditarSiniestro'));
 
@@ -144,9 +145,9 @@ async function cargarSeccion(seccion) {
 // 4. RENDERIZADORES (VISTAS)
 // =========================================================
 
-// --- VISTA SEGUROS (CON BUSCADOR) ---
+// --- VISTA SEGUROS ---
 function renderizarSeguros(lista, contenedor, titulo) {
-    if (lista.length === 0) { 
+    if (!lista || lista.length === 0) { 
         contenedor.innerHTML = `<h3 class="mb-4">${titulo}</h3><div class="alert alert-info shadow-sm">No hay pólizas registradas.</div>`;
         return; 
     }
@@ -197,13 +198,15 @@ function renderizarSeguros(lista, contenedor, titulo) {
     htmlLista += '</div>';
     contenedor.innerHTML = htmlBuscador + htmlLista;
 
-    document.getElementById('buscadorSeguros').addEventListener('keyup', (e) => {
-        const texto = e.target.value.toLowerCase();
-        document.querySelectorAll('.item-seguro').forEach(item => { item.style.display = item.textContent.toLowerCase().includes(texto) ? '' : 'none'; });
-    });
+    if(document.getElementById('buscadorSeguros')){
+        document.getElementById('buscadorSeguros').addEventListener('keyup', (e) => {
+            const texto = e.target.value.toLowerCase();
+            document.querySelectorAll('.item-seguro').forEach(item => { item.style.display = item.textContent.toLowerCase().includes(texto) ? '' : 'none'; });
+        });
+    }
 }
 
-// --- VISTA USUARIOS (CON BUSCADOR Y EDICIÓN) ---
+// --- VISTA USUARIOS ---
 function renderizarUsuarios(lista, contenedor) {
     let botonCrear = '';
     let headerAcciones = '';
@@ -246,14 +249,16 @@ function renderizarUsuarios(lista, contenedor) {
     htmlLista += '</tbody></table></div></div>';
     contenedor.innerHTML = htmlBuscador + htmlLista;
 
-    document.getElementById('buscadorUsuarios').addEventListener('keyup', (e) => {
-        const texto = e.target.value.toLowerCase();
-        const filas = document.getElementById('tablaUsuarios').getElementsByTagName('tr');
-        for (let fila of filas) fila.style.display = fila.textContent.toLowerCase().includes(texto) ? '' : 'none';
-    });
+    if(document.getElementById('buscadorUsuarios')){
+        document.getElementById('buscadorUsuarios').addEventListener('keyup', (e) => {
+            const texto = e.target.value.toLowerCase();
+            const filas = document.getElementById('tablaUsuarios').getElementsByTagName('tr');
+            for (let fila of filas) fila.style.display = fila.textContent.toLowerCase().includes(texto) ? '' : 'none';
+        });
+    }
 }
 
-// --- VISTA FACTURAS (CON BUSCADOR) ---
+// --- VISTA FACTURAS ---
 function renderizarFacturas(lista, contenedor, titulo) {
     const tituloMostrar = titulo || 'Mis Facturas';
     if (!lista || lista.length === 0) { 
@@ -280,18 +285,21 @@ function renderizarFacturas(lista, contenedor, titulo) {
         if (usuario.rol === 'ADMIN') {
              btnBorrar = `<button class="btn btn-sm btn-outline-danger ms-1" onclick="solicitarBorrado_V2('facturas', ${elId})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>`;
         }
-        htmlLista += `<tr><td class="ps-4 fw-bold">${f.concepto || 'Sin concepto'}</td>${tdCliente}<td>${f.fechaEmision}</td><td class="fw-bold text-primary">${f.importe} €</td><td class="text-end pe-4"><button class="btn btn-sm btn-primary" onclick="prepararFactura(${jsonF})" title="Imprimir"><i class="fa-solid fa-print"></i></button>${btnBorrar}</td></tr>`;
+        htmlLista += `<tr><td class="ps-4 fw-bold">${f.concepto || 'Sin concepto'}</td>${tdCliente}<td>${f.fechaEmision}</td><td class="fw-bold text-primary">${f.importe} €</td><td class="text-end pe-4"><button class="btn btn-sm btn-primary" onclick="prepararFactura(${jsonF})" title="Imprimir/PDF"><i class="fa-solid fa-print"></i></button>${btnBorrar}</td></tr>`;
     });
     htmlLista += '</tbody></table></div></div>';
     contenedor.innerHTML = htmlBuscador + htmlLista;
-    document.getElementById('buscadorFacturas').addEventListener('keyup', (e) => {
-        const texto = e.target.value.toLowerCase();
-        const filas = document.getElementById('tablaFacturas').getElementsByTagName('tr');
-        for (let fila of filas) fila.style.display = fila.textContent.toLowerCase().includes(texto) ? '' : 'none';
-    });
+    
+    if(document.getElementById('buscadorFacturas')){
+        document.getElementById('buscadorFacturas').addEventListener('keyup', (e) => {
+            const texto = e.target.value.toLowerCase();
+            const filas = document.getElementById('tablaFacturas').getElementsByTagName('tr');
+            for (let fila of filas) fila.style.display = fila.textContent.toLowerCase().includes(texto) ? '' : 'none';
+        });
+    }
 }
 
-// --- VISTA SINIESTROS (CON BUSCADOR Y EDICIÓN) ---
+// --- VISTA SINIESTROS ---
 function renderizarSiniestros(siniestros, seguros, contenedor, titulo) {
     const tituloMostrar = titulo || 'Gestión de Siniestros';
     let opcionesSeguro = '<option value="" disabled selected>-- Seleccione Seguro --</option>';
@@ -516,12 +524,12 @@ function renderizarFormularioAlta(tipos, listaUsuarios, contenedor) {
     <h3 class="mb-4">Contratar Nuevo Seguro</h3>
     <div class="card shadow-sm border-0" style="max-width: 700px;"><div class="card-body p-4"><form id="formAlta">
         <div class="mb-3"><label class="fw-bold">Cliente</label><select id="idClienteAsignado" class="form-select" required>${optsUsuarios}</select></div>
-        <div class="row mb-3"><div class="col"><label>Tipo</label><select id="idTipo" class="form-select" required>${optsTipos}</select></div>
-        <div class="col"><label>Póliza</label><input id="numPoliza" class="form-control bg-light" value="${poliza}" readonly></div></div>
+        <div class="row mb-3"><div class="col"><label class="fw-bold">Tipo</label><select id="idTipo" class="form-select" required>${optsTipos}</select></div>
+        <div class="col"><label class="fw-bold">Póliza</label><input id="numPoliza" class="form-control bg-light" value="${poliza}" readonly></div></div>
         <div class="row mb-3"><div class="col"><label>Inicio</label><input type="date" id="fInicio" class="form-control" required></div>
         <div class="col"><label>Renovación</label><input type="date" id="fRenov" class="form-control" required></div></div>
-        <div class="mb-3"><label>Detalles</label><textarea id="detalles" class="form-control" required></textarea></div>
-        <div class="mb-3"><label>Precio (€)</label><input type="number" id="precio" class="form-control" required></div>
+        <div class="mb-3"><label class="fw-bold">Detalles</label><textarea id="detalles" class="form-control" required></textarea></div>
+        <div class="mb-3"><label class="fw-bold">Precio (€)</label><input type="number" id="precio" class="form-control" required></div>
         <button type="submit" class="btn btn-primary w-100">Crear Póliza</button>
     </form></div></div>`;
     
@@ -545,7 +553,6 @@ function renderizarPerfil(c) {
     document.getElementById('formPerfil').addEventListener('submit', async(e)=>{ e.preventDefault(); try { const res = await fetch(`${API_URL}/usuarios/${usuario.idUsuario}`, { method:'PUT', headers:{'Content-Type':'application/json'}, credentials: 'include', body:JSON.stringify({...usuario, nombreCompleto:document.getElementById('pN').value, movil:document.getElementById('pM').value})}); if(res.ok){ usuario=await res.json(); sessionStorage.setItem('usuario',JSON.stringify(usuario)); document.getElementById('nombreUsuarioDisplay').textContent=usuario.nombreCompleto; mostrarPopup("Actualizado."); } } catch(e){mostrarPopup("Error.");} });
 }
 
-// RESTAURANDO TEXTOS COMPLETOS DE AYUDA Y PRIVACIDAD
 function renderizarAyuda(contenedor) {
     contenedor.innerHTML = `
     <h3 class="mb-4">Centro de Ayuda y Soporte</h3>
@@ -618,12 +625,38 @@ function renderizarPrivacidad(contenedor) {
 
 // UTILIDADES FINALES
 async function crearUsuarioNuevo(e) { e.preventDefault(); const d = { nombreCompleto: document.getElementById('newUserName').value, correo: document.getElementById('newUserEmail').value, password: document.getElementById('newUserPass').value, rol: document.getElementById('newUserRol').value, activo: true }; try { const res = await fetch(`${API_URL}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(d) }); if(res.ok) { modalCrearUser.hide(); mostrarPopup("Creado."); cargarSeccion('usuarios'); } } catch(err) {} }
-function prepararFactura(f) { document.getElementById('areaImpresion').innerHTML=`<h3>Factura ${f.idFactura}</h3><p>${f.concepto} - ${f.importe}€</p>`; modalPrint.show(); }
-function descargarPDF(id) { const el=document.getElementById('areaImpresion'); html2pdf().from(el).save(); }
+function prepararFactura(f) { 
+    const contenido = `
+    <div id="facturaImprimible" class="p-5 bg-white border">
+        <div class="d-flex justify-content-between mb-4">
+            <div><h2 class="fw-bold text-primary">FACTURA</h2><p class="text-muted mb-0">Aseguradora App S.L.</p></div>
+            <div class="text-end"><h5 class="text-dark">Ref: INV-${f.idFactura}</h5><p class="text-muted">${f.fechaEmision}</p></div>
+        </div>
+        <hr>
+        <div class="row mb-5"><div class="col-6"><h6 class="fw-bold">Cliente:</h6><p class="mb-0">${usuario.nombreCompleto}</p><p class="mb-0">${usuario.correo}</p></div></div>
+        <table class="table table-bordered"><thead class="table-light"><tr><th>Concepto</th><th class="text-end">Importe</th></tr></thead>
+        <tbody><tr><td class="p-3">${f.concepto}</td><td class="text-end p-3 fw-bold">${f.importe} €</td></tr></tbody>
+        <tfoot><tr class="table-secondary"><th class="text-end">TOTAL</th><th class="text-end fs-4">${f.importe} €</th></tr></tfoot></table>
+    </div>`;
+    document.getElementById('areaImpresion').innerHTML = contenido;
+    // Configurar botones del modal
+    const footer = document.getElementById('printModal').querySelector('.modal-footer');
+    footer.innerHTML = `
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir</button>
+        <button type="button" class="btn btn-success" onclick="descargarPDF(${f.idFactura})"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
+    `;
+    modalPrint.show(); 
+}
+function descargarPDF(id) { 
+    const element = document.getElementById('facturaImprimible');
+    if(!element || typeof html2pdf === 'undefined') { alert("Error PDF"); return; }
+    html2pdf().set({ margin: 10, filename: `Factura_${id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(element).save();
+}
 async function iniciarSetup2FA() { const res = await fetch(`${API_URL}/auth/setup-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo})}); if(res.ok){ const d=await res.json(); document.getElementById('qrContainer').innerHTML=""; new QRCode(document.getElementById('qrContainer'), d.qrUrl); modal2FA.show(); } }
 async function confirmarActivacion2FA() { const c = document.getElementById('inputCodeConfirm').value; const res = await fetch(`${API_URL}/auth/confirm-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo, codigo:c})}); if(res.ok){ modal2FA.hide(); usuario.twoFactorEnabled=true; sessionStorage.setItem('usuario', JSON.stringify(usuario)); renderizarConfiguracion(document.getElementById('contenido-dinamico')); } }
 async function desactivar2FA() { if(confirm("¿Quitar 2FA?")) { const res = await fetch(`${API_URL}/auth/disable-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo})}); if(res.ok){ usuario.twoFactorEnabled=false; sessionStorage.setItem('usuario', JSON.stringify(usuario)); renderizarConfiguracion(document.getElementById('contenido-dinamico')); } } }
-function renderizarCargando(c, t) { c.innerHTML = `<div class="text-center mt-5"><div class="spinner-border"></div><p>${t}</p></div>`; }
+function renderizarCargando(c, t) { c.innerHTML = `<div class="text-center mt-5"><div class="spinner-border text-primary"></div><p>${t}</p></div>`; }
 function mostrarError(c) { c.innerHTML = '<div class="alert alert-danger">Error.</div>'; }
 function mostrarPopup(msg) { document.getElementById('modalMensaje').innerText = msg; modalInfo.show(); }
 function logout() { sessionStorage.removeItem('usuario'); window.location.href = 'index.html'; }

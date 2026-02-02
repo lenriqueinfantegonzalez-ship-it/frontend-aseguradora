@@ -75,97 +75,90 @@
     </div>
 
     <script>
-        let correoGuardado = "";
+    let correoGuardado = "";
 
-        // --- LOGIN ---
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const correo = document.getElementById('correo').value;
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('errorMsg');
-            if (errorDiv) errorDiv.classList.add('d-none');
+    // 1. LOGIN
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const correo = document.getElementById('correo').value;
+        const password = document.getElementById('password').value;
 
-            try {
-                const response = await fetch('http://localhost:8081/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ correo, password })
-                });
+        try {
+            // QUITAMOS 'credentials: include' y dejamos solo headers
+            const response = await fetch('http://localhost:8081/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ correo, password })
+            });
 
-                if (response.ok) {
-                    const data = await response.json();
+            if (response.ok) {
+                const data = await response.json();
 
-                    if (data.status === '2FA_REQUIRED') {
-                        // El usuario TIENE activado el 2FA, pedimos código
-                        correoGuardado = data.correo;
-                        mostrarPantallaCodigo();
-                    } else {
-                        // El usuario NO tiene 2FA, entra directo
-                        guardarSesionYRedirigir(data.usuario);
-                    }
+                if (data.status === '2FA_REQUIRED') {
+                    correoGuardado = data.correo;
+                    mostrarPantallaCodigo();
                 } else {
-                    mostrarError('Credenciales incorrectas.');
+                    // AQUÍ ESTÁ EL CAMBIO CLAVE: Pasamos el token
+                    guardarSesionYRedirigir(data.usuario, data.token);
                 }
-            } catch (error) {
-                console.error(error);
-                mostrarError('Error de conexión.');
+            } else {
+                mostrarError('Credenciales incorrectas.');
             }
-        });
+        } catch (error) {
+            console.error(error);
+            mostrarError('Error de conexión.');
+        }
+    });
 
-       // --- VERIFICAR CÓDIGO ---
-        document.getElementById('form2FA').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const codigo = document.getElementById('codigoInput').value.replace(/\s/g, '');
-            const errorDiv = document.getElementById('errorMsg');
-            if (errorDiv) errorDiv.classList.add('d-none');
+    // 2. VERIFICACIÓN 2FA
+    document.getElementById('form2FA').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const codigo = document.getElementById('codigoInput').value.replace(/\s/g, '');
 
-            try {
-                const response = await fetch('http://localhost:8081/api/auth/verify-2fa', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ correo: correoGuardado, codigo: codigo })
-                });
+        try {
+            const response = await fetch('http://localhost:8081/api/auth/verify-2fa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ correo: correoGuardado, codigo: codigo })
+            });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    guardarSesionYRedirigir(data.usuario);
-                } else {
-                    // --- AQUÍ ESTÁ EL CAMBIO PARA EL LÍMITE ---
-                    if (response.status === 403) {
-                        alert("Has superado el límite de 3 intentos. Volviendo al inicio de sesión...");
-                        location.reload(); // Esto recarga la página y te manda al Login
-                        return;
-                    }
-
-                    const textoError = await response.text();
-                    mostrarError(textoError || 'Código incorrecto.');
-                }
-            } catch (error) {
-                console.error(error);
-                mostrarError('Error al verificar.');
+            if (response.ok) {
+                const data = await response.json();
+                // AQUÍ TAMBIÉN: Pasamos el token
+                guardarSesionYRedirigir(data.usuario, data.token);
+            } else {
+                mostrarError('Código incorrecto.');
             }
-        });
-
-        function mostrarPantallaCodigo() {
-            document.getElementById('loginForm').classList.add('d-none');
-            document.getElementById('form2FA').classList.remove('d-none');
-            document.getElementById('tituloLogin').textContent = "Verificación 2FA";
-            document.getElementById('codigoInput').focus();
+        } catch (error) {
+            mostrarError('Error al verificar.');
         }
+    });
 
-        function guardarSesionYRedirigir(usuario) {
-            if (!usuario.idUsuario && usuario.id) usuario.idUsuario = usuario.id;
-            sessionStorage.setItem('usuario', JSON.stringify(usuario));
-            window.location.href = 'dashboard.html';
-        }
+    // 3. FUNCIÓN CORREGIDA (Guarda Token y Usuario)
+    function guardarSesionYRedirigir(usuario, token) {
+        if (!usuario.idUsuario && usuario.id) usuario.idUsuario = usuario.id;
+        
+        // GUARDAMOS EL TOKEN (IMPORTANTE)
+        if(token) localStorage.setItem('token', token);
+        
+        // Usamos localStorage en lugar de sessionStorage para que coincida con script.js
+        localStorage.setItem('usuario', JSON.stringify(usuario));
+        
+        window.location.href = 'dashboard.html';
+    }
 
-        function mostrarError(msg) {
-            const d = document.getElementById('errorMsg');
-            if(d) { d.textContent = msg; d.classList.remove('d-none'); }
-            else alert(msg);
-        }
-    </script>
+    // ... resto de funciones (mostrarPantallaCodigo, mostrarError) igual ...
+    function mostrarPantallaCodigo() {
+        document.getElementById('loginForm').classList.add('d-none');
+        document.getElementById('form2FA').classList.remove('d-none');
+        document.getElementById('tituloLogin').textContent = "Verificación 2FA";
+    }
+
+    function mostrarError(msg) {
+        const d = document.getElementById('errorMsg');
+        if(d) { d.textContent = msg; d.classList.remove('d-none'); }
+        else alert(msg);
+    }
+</script>
 </body>
 </html>

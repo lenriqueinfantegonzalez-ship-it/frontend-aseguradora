@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEIGSeguros</title>
+    <title>LEIGSeguros - Panel</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
@@ -81,6 +83,7 @@
         <div id="contenido-dinamico">
             <div class="text-center mt-5">
                 <div class="spinner-border text-primary"></div>
+                <p class="mt-2 text-muted">Cargando sistema...</p>
             </div>
         </div>
     </div>
@@ -130,21 +133,33 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body bg-light" id="areaImpresion"></div>
-                <div class="modal-footer">
-                    </div>
+                <div class="modal-footer"></div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="empresaModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title">Sobre Nosotros</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body">
-                    <p><strong>LEIGSeguros S.L.</strong></p>
-                    <p>Bajo Manhattan 4, Nueva York</p>
-                    <p>CIF: B02702066</p>
-                    <p>Email: aseguradoraleig@gmail.com</p>
+    <div class="modal fade" id="empresaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered"> 
+            <div class="modal-content border-0 shadow-lg overflow-hidden">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fa-solid fa-building-shield me-2"></i>Sede Corporativa
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-5 bg-light p-4 d-flex flex-column justify-content-center">
+                            <h4 class="text-primary fw-bold mb-1">LEIGSeguros</h4>
+                            <p class="text-muted small mb-4">Protección Global S.L.</p>
+                            <div class="mb-3"><strong class="d-block text-dark">Ubicación</strong><span class="text-muted small">Madrid, España</span></div>
+                            <div class="mb-3"><strong class="d-block text-dark">Contacto</strong><span class="text-muted small">+34 900 123 456</span></div>
+                            <div class="mb-3"><strong class="d-block text-dark">Email</strong><span class="text-muted small">aseguradoraleig@gmail.com</span></div>
+                        </div>
+                        <div class="col-md-7">
+                            <iframe src="https://maps.google.com/maps?q=Madrid&t=&z=13&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style="border:0; min-height: 400px;" allowfullscreen="" loading="lazy"></iframe>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -159,155 +174,102 @@
                 </div>
                 <div class="modal-body">
                     <form id="formCrearUsuario">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Nombre Completo</label>
-                            <input type="text" id="newUserName" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Correo Electrónico</label>
-                            <input type="email" id="newUserEmail" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Contraseña</label>
-                            <input type="password" id="newUserPass" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Rol</label>
+                        <div class="mb-3"><label class="form-label fw-bold">Nombre</label><input type="text" id="newUserName" class="form-control" required></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Correo</label><input type="email" id="newUserEmail" class="form-control" required></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Contraseña</label><input type="password" id="newUserPass" class="form-control" required></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Rol</label>
                             <select id="newUserRol" class="form-select">
-                                <option value="USER">Usuario (Cliente)</option>
+                                <option value="USER">Cliente</option>
                                 <option value="ADMIN">Administrador</option>
                             </select>
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-success">Crear Usuario</button>
-                        </div>
+                        <div class="d-grid"><button type="submit" class="btn btn-success">Crear</button></div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="modal fade" id="modal2FA" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold">Configurar 2FA</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center p-4">
-                <div id="step1-qr">
-                    <p class="mb-3">1. Escanea este QR con <strong>Google Authenticator</strong>:</p>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">Configurar 2FA</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <p class="mb-3">1. Escanea el QR con Google Authenticator:</p>
                     <div id="qrContainer" class="d-flex justify-content-center mb-3"></div>
-
-                    <p class="text-muted small mt-3">2. Introduce el código de 6 dígitos que te da la app:</p>
-                    <input type="text" id="inputCodeConfirm" class="form-control text-center fs-3 letter-spacing mb-3" maxlength="6" placeholder="000000">
-
-                    <button class="btn btn-success w-100 fw-bold" onclick="confirmarActivacion2FA()">
-                        <i class="fa-solid fa-check me-2"></i> Confirmar y Activar
-                    </button>
+                    <p class="text-muted small mt-3">2. Código de verificación:</p>
+                    <input type="text" id="inputCodeConfirm" class="form-control text-center fs-3 mb-3" maxlength="6" placeholder="000000">
+                    <button class="btn btn-success w-100 fw-bold" onclick="confirmarActivacion2FA()">Confirmar</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<div class="modal fade" id="modalBorrado" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title fw-bold">Zona de Peligro</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4 text-center">
-                <h5 class="fw-bold">¿Seguro que quieres borrar?</h5>
-                <p class="text-muted">Escribe <strong class="text-danger">ELIMINAR</strong> abajo.</p>
-                
-                <input type="text" id="inputBorradoConfirm" class="form-control text-center mb-3" 
-                       placeholder="Escribe ELIMINAR" onkeyup="verificarTextoBorrado_V2()">
-                
-                <button id="btnBorrarFinal" class="btn btn-danger w-100 fw-bold" disabled onclick="ejecutarBorrado_V2()">
-                    Confirmar Eliminación
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="modalEditarUsuario" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Editar Usuario</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formEditarUsuario">
-                    <input type="hidden" id="editUserId">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre Completo</label>
-                        <input type="text" id="editUserNombre" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Correo (No modificable)</label>
-                        <input type="email" id="editUserEmail" class="form-control bg-light" disabled>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Rol</label>
-                            <select id="editUserRol" class="form-select">
-                                <option value="USER">Cliente (USER)</option>
-                                <option value="ADMIN">Administrador</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Estado</label>
-                            <select id="editUserActivo" class="form-select">
-                                <option value="true">Activo</option>
-                                <option value="false">Inactivo (Bloqueado)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="modal fade" id="modalEditarSiniestro" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title fw-bold">Gestionar Siniestro</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formEditarSiniestro">
-                    <input type="hidden" id="editSinId">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Descripción del Cliente</label>
-                        <textarea id="editSinDesc" class="form-control bg-light" rows="3" disabled></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Estado</label>
-                        <select id="editSinEstado" class="form-select">
-                            <option value="ABIERTO">ABIERTO (En trámite)</option>
-                            <option value="CERRADO">CERRADO (Resuelto)</option>
-                            <option value="RECHAZADO">RECHAZADO</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Resolución Técnica / Comentarios</label>
-                        <textarea id="editSinResolucion" class="form-control" rows="4" placeholder="Escriba aquí la solución o motivo del cierre..."></textarea>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-warning fw-bold">Actualizar Expediente</button>
-                    </div>
-                </form>
+    <div class="modal fade" id="modalBorrado" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold">Zona de Peligro</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <h5 class="fw-bold">¿Seguro que quieres borrar?</h5>
+                    <p class="text-muted">Escribe <strong class="text-danger">ELIMINAR</strong> abajo.</p>
+                    <input type="text" id="inputBorradoConfirm" class="form-control text-center mb-3" placeholder="Escribe ELIMINAR" onkeyup="verificarTextoBorrado_V2()">
+                    <button id="btnBorrarFinal" class="btn btn-danger w-100 fw-bold" disabled onclick="ejecutarBorrado_V2()">Confirmar Eliminación</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+    <div class="modal fade" id="modalEditarUsuario" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Editar Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarUsuario">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3"><label class="form-label fw-bold">Nombre</label><input type="text" id="editUserNombre" class="form-control" required></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Correo</label><input type="email" id="editUserEmail" class="form-control bg-light" disabled></div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label class="form-label fw-bold">Rol</label><select id="editUserRol" class="form-select"><option value="USER">USER</option><option value="ADMIN">ADMIN</option></select></div>
+                            <div class="col-md-6 mb-3"><label class="form-label fw-bold">Estado</label><select id="editUserActivo" class="form-select"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+                        </div>
+                        <div class="d-grid"><button type="submit" class="btn btn-primary">Guardar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditarSiniestro" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold">Gestionar Siniestro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarSiniestro">
+                        <input type="hidden" id="editSinId">
+                        <div class="mb-3"><label class="form-label fw-bold">Descripción</label><textarea id="editSinDesc" class="form-control bg-light" rows="3" disabled></textarea></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Estado</label><select id="editSinEstado" class="form-select"><option value="ABIERTO">ABIERTO</option><option value="CERRADO">CERRADO</option><option value="RECHAZADO">RECHAZADO</option></select></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Resolución</label><textarea id="editSinResolucion" class="form-control" rows="4"></textarea></div>
+                        <div class="d-grid"><button type="submit" class="btn btn-warning fw-bold">Actualizar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="script.js"></script>
+
 </body>
 </html>

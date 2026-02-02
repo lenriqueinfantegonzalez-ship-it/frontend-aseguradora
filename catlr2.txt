@@ -20,7 +20,7 @@ frontend-aseguradora/
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activar Cuenta</title>
+    <title>LEIGSeguros</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -113,7 +113,7 @@ frontend-aseguradora/
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Aseguradora</title>
+    <title>LEIGSeguros</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
@@ -124,8 +124,8 @@ frontend-aseguradora/
 
     <nav class="navbar-top">
         <div class="d-flex align-items-center">
-            <div class="logo-circle">A</div>
-            <span class="fw-bold fs-5">Aseguradora App</span>
+            <div class="logo-circle">LEIG</div>
+            <span class="fw-bold fs-5">LEIGSeguros</span>
         </div>
         <div class="d-none d-md-block fw-bold text-uppercase">Gestión de Pólizas</div>
         
@@ -246,15 +246,70 @@ frontend-aseguradora/
         </div>
     </div>
 
-    <div class="modal fade" id="empresaModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title">Sobre Nosotros</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body">
-                    <p><strong>Aseguradora App S.L.</strong></p>
-                    <p>Calle Principal 123, Madrid</p>
-                    <p>CIF: B-12345678</p>
-                    <p>Email: contacto@aseguradora.com</p>
+   <div class="modal fade" id="empresaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered"> <div class="modal-content border-0 shadow-lg overflow-hidden">
+                
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fa-solid fa-building-shield me-2"></i>Sede Corporativa
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-5 bg-light p-4 d-flex flex-column justify-content-center">
+                            <h4 class="text-primary fw-bold mb-1">LEIGSeguros</h4>
+                            <p class="text-muted small mb-4">Protección Global S.L.</p>
+
+                            <div class="mb-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="me-3 mt-1 text-primary"><i class="fa-solid fa-location-dot fa-lg"></i></div>
+                                    <div>
+                                        <strong class="d-block text-dark">Ubicación</strong>
+                                        <span class="text-muted small">Lower Manhattan 4,<br>New York, NY</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="me-3 mt-1 text-primary"><i class="fa-solid fa-phone fa-lg"></i></div>
+                                    <div>
+                                        <strong class="d-block text-dark">Atención al Cliente</strong>
+                                        <span class="text-muted small">+1 (212) 555-0199</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="me-3 mt-1 text-primary"><i class="fa-solid fa-envelope fa-lg"></i></div>
+                                    <div>
+                                        <strong class="d-block text-dark">Email Corporativo</strong>
+                                        <span class="text-muted small">aseguradoraleig@gmail.com</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="text-muted">
+                            <div class="small text-muted">
+                                <i class="fa-regular fa-clock me-2"></i>Lun - Vie: 09:00 - 18:00
+                            </div>
+                        </div>
+
+                        <div class="col-md-7">
+                            <iframe 
+                                src="https://maps.google.com/maps?q=Lower%20Manhattan%204%2C%20New%20York&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                                width="100%" 
+                                height="100%" 
+                                style="border:0; min-height: 400px;" 
+                                allowfullscreen="" 
+                                loading="lazy" 
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -427,7 +482,7 @@ frontend-aseguradora/
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Aseguradora</title>
+    <title>LEIGSeguros</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -460,8 +515,8 @@ frontend-aseguradora/
 <body>
 
     <div class="login-card">
-        <div class="brand-logo">A</div>
-        <h3 id="tituloLogin" class="text-center mb-4 fw-bold text-primary">Bienvenido</h3>
+        <div class="brand-logo">LEIG</div>
+        <h3 id="tituloLogin" class="text-center mb-4 fw-bold text-primary">LEIGSeguros</h3>
         
         <form id="loginForm">
             <div class="mb-3">
@@ -599,7 +654,7 @@ frontend-aseguradora/
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recuperar Contraseña</title>
+    <title>LEIGSeguros</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -677,7 +732,7 @@ frontend-aseguradora/
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nueva Contraseña</title>
+    <title>LEIGSeguros</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -850,7 +905,7 @@ if (!usuarioGuardado) {
         if(document.getElementById('modalBorrado')) modalBorrado = new bootstrap.Modal(document.getElementById('modalBorrado'));
         if(document.getElementById('modal2FA')) modal2FA = new bootstrap.Modal(document.getElementById('modal2FA'));
         if(document.getElementById('empresaModal')) modalEmpresa = new bootstrap.Modal(document.getElementById('empresaModal'));
-        
+        if(document.getElementById('confirmModal')) modalConfirm = new bootstrap.Modal(document.getElementById('confirmModal'));
         // Modales de Edición
         if(document.getElementById('modalEditarUsuario')) modalEditarUser = new bootstrap.Modal(document.getElementById('modalEditarUsuario'));
         if(document.getElementById('modalEditarSiniestro')) modalEditarSin = new bootstrap.Modal(document.getElementById('modalEditarSiniestro'));
@@ -1315,7 +1370,7 @@ async function ejecutarBorrado_V2() {
             const texto = await res.text();
             if (res.status === 409 || res.status === 500) {
                 if (texto.includes("constraint") || texto.includes("foreign key")) mostrarPopup("💡 No se puede eliminar la póliza todavía.\n\nPrimero debes eliminar las FACTURAS o SINIESTROS asociados a ella.");
-                else mostrarPopup("El servidor no pudo borrar el elemento. Inténtalo más tarde.");
+                else mostrarPopup("💡 No se puede eliminar la póliza todavía.\n\nPrimero debes eliminar las FACTURAS o SINIESTROS asociados a ella.");
             } else mostrarPopup("No se pudo completar la acción.");
         }
     } catch (error) { alert("Error conexión."); } finally { if(btn) btn.innerHTML = 'Confirmar Eliminación'; }
@@ -1353,7 +1408,13 @@ function renderizarFormularioAlta(tipos, listaUsuarios, contenedor) {
 }
 
 function renderizarConfiguracion(c) {
-    let botonHtml = usuario.twoFactorEnabled ? `<div class="alert alert-success mb-3">2FA Activado</div><button class="btn btn-outline-danger w-100" onclick="desactivar2FA()">Desactivar 2FA</button>` : `<button class="btn btn-primary w-100" onclick="iniciarSetup2FA()">Activar 2FA</button>`;
+    let botonHtml = usuario.twoFactorEnabled ?
+        // AQUÍ ESTÁ EL CAMBIO: onclick="solicitarDesactivar2FA()"
+        `<div class="alert alert-success mb-3 shadow-sm"><i class="fa-solid fa-shield-check me-2"></i>2FA Activado</div>
+         <button class="btn btn-outline-danger w-100" onclick="solicitarDesactivar2FA()">Desactivar 2FA</button>` 
+        : 
+        `<button class="btn btn-primary w-100" onclick="iniciarSetup2FA()">Activar 2FA</button>`;
+        
     c.innerHTML = `<h3 class="mb-4">Configuración</h3><div class="row justify-content-center"><div class="col-md-8"><div class="card shadow border-0"><div class="card-body p-5 text-center"><i class="fa-solid fa-mobile-screen-button text-primary fa-4x mb-4"></i><h4>Seguridad 2FA</h4><div class="mt-2">${botonHtml}</div></div></div></div></div>`;
 }
 
@@ -1395,10 +1456,10 @@ function renderizarPrivacidad(contenedor) {
     <h3 class="mb-4">Política de Privacidad y Aviso Legal</h3>
     <div class="card shadow-sm border-0"><div class="card-body p-5">
         <div class="text-center mb-5"><div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-weight: bold; font-size: 24px;">A</div>
-        <h2 class="fw-bold text-dark">Aseguradora App</h2><p class="text-muted">Comprometidos con la transparencia y tu seguridad.</p></div>
+        <h2 class="fw-bold text-dark">LEIGSeguros</h2><p class="text-muted">Comprometidos con la transparencia y tu seguridad.</p></div>
 
         <h5 class="fw-bold mt-4"><i class="fa-solid fa-building-shield me-2 text-primary"></i>1. Responsable del Tratamiento</h5>
-        <p class="text-justify text-muted"><strong>Aseguradora App S.L.</strong>, con domicilio en Calle Mayor 123, Madrid, España, es la responsable del tratamiento de sus datos personales. Puede contactar con nuestro Delegado de Protección de Datos (DPO) en <strong>dpo@aseguradora.com</strong>.</p>
+        <p class="text-justify text-muted"><strong>LEIGSeguros S.L.</strong>, con domicilio en Calle Mayor 123, Madrid, España, es la responsable del tratamiento de sus datos personales. Puede contactar con nuestro Delegado de Protección de Datos (DPO) en <strong>aseguradoraleig@gmail.com</strong>.</p>
 
         <h5 class="fw-bold mt-4"><i class="fa-solid fa-file-contract me-2 text-primary"></i>2. Finalidad del Tratamiento</h5>
         <p class="text-justify text-muted">Sus datos personales serán utilizados exclusivamente para las siguientes finalidades:
@@ -1427,18 +1488,18 @@ function renderizarPrivacidad(contenedor) {
             Puede ejercer estos derechos enviando una solicitud por escrito a nuestra dirección de contacto.
         </p>
         <hr class="my-5">
-        <div class="text-center text-muted small"><p class="mb-1"><strong>&copy; ${year} Aseguradora App S.L.</strong> Todos los derechos reservados.</p>
+        <div class="text-center text-muted small"><p class="mb-1"><strong>&copy; ${year} LEIGSeguros S.L.</strong> Todos los derechos reservados.</p>
         <p>Inscrita en el Registro Mercantil de Madrid, Tomo 1234, Folio 56, Hoja M-12345.</p></div>
     </div></div>`;
 }
 
 // UTILIDADES FINALES
-async function crearUsuarioNuevo(e) { e.preventDefault(); const d = { nombreCompleto: document.getElementById('newUserName').value, correo: document.getElementById('newUserEmail').value, password: document.getElementById('newUserPass').value, rol: document.getElementById('newUserRol').value, activo: true }; try { const res = await fetch(`${API_URL}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(d) }); if(res.ok) { modalCrearUser.hide(); mostrarPopup("Creado."); cargarSeccion('usuarios'); } } catch(err) {} }
+async function crearUsuarioNuevo(e) { e.preventDefault(); const d = { nombreCompleto: document.getElementById('newUserName').value, correo: document.getElementById('newUserEmail').value, password: document.getElementById('newUserPass').value, rol: document.getElementById('newUserRol').value, activo: false }; try { const res = await fetch(`${API_URL}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(d) }); if(res.ok) { modalCrearUser.hide(); mostrarPopup("Creado."); cargarSeccion('usuarios'); } } catch(err) {} }
 function prepararFactura(f) { 
     const contenido = `
     <div id="facturaImprimible" class="p-5 bg-white border">
         <div class="d-flex justify-content-between mb-4">
-            <div><h2 class="fw-bold text-primary">FACTURA</h2><p class="text-muted mb-0">Aseguradora App S.L.</p></div>
+            <div><h2 class="fw-bold text-primary">FACTURA</h2><p class="text-muted mb-0"> LEIGSeguros S.L.</p></div>
             <div class="text-end"><h5 class="text-dark">Ref: INV-${f.idFactura}</h5><p class="text-muted">${f.fechaEmision}</p></div>
         </div>
         <hr>
@@ -1462,9 +1523,59 @@ function descargarPDF(id) {
     if(!element || typeof html2pdf === 'undefined') { alert("Error PDF"); return; }
     html2pdf().set({ margin: 10, filename: `Factura_${id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(element).save();
 }
+// Función 1: Abre el modal y prepara el botón
+function solicitarDesactivar2FA() {
+    const modalEl = document.getElementById('confirmModal');
+    const btnConfirmar = document.getElementById('btnConfirmarBorrado');
+    
+    // 1. Cambiamos los textos del Modal para que no parezca de borrar
+    modalEl.querySelector('.modal-header').classList.replace('bg-danger', 'bg-warning'); // Color amarillo advertencia
+    modalEl.querySelector('.modal-title').textContent = "Desactivar Seguridad";
+    modalEl.querySelector('.modal-body i').className = "fa-solid fa-shield-slash text-warning fa-3x mb-3"; // Icono escudo roto
+    modalEl.querySelector('.modal-body p.fw-bold').textContent = "¿Seguro que quieres quitar el 2FA?";
+    modalEl.querySelector('.modal-body p.small').textContent = "Tu cuenta será menos segura sin la verificación en dos pasos.";
+    
+    // 2. Configuramos el botón "Sí"
+    btnConfirmar.className = "btn btn-warning fw-bold";
+    btnConfirmar.textContent = "Sí, Desactivar";
+    
+    // 3. Le asignamos la acción de borrar al hacer click
+    btnConfirmar.onclick = function() {
+        modalConfirm.hide();
+        ejecutarDesactivacionReal(); // Llamamos a la función real
+    };
+
+    // 4. Mostramos el modal
+    modalConfirm.show();
+}
+
+// Función 2: La que llama a la API (Backend)
+async function ejecutarDesactivacionReal() {
+    try {
+        const res = await fetch(`${API_URL}/auth/disable-2fa`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({correo: usuario.correo})
+        });
+
+        if(res.ok){
+            usuario.twoFactorEnabled = false;
+            sessionStorage.setItem('usuario', JSON.stringify(usuario));
+            
+            // Recargamos la vista para que salga el botón azul de "Activar"
+            renderizarConfiguracion(document.getElementById('contenido-dinamico'));
+            
+            // Restauramos el estilo del modal (opcional, por limpieza) y avisamos
+            mostrarPopup("Autenticación en dos pasos desactivada.");
+        } else {
+            mostrarPopup("No se pudo desactivar. Inténtalo de nuevo.");
+        }
+    } catch(e) {
+        mostrarPopup("Error de conexión con el servidor.");
+    }
+}
 async function iniciarSetup2FA() { const res = await fetch(`${API_URL}/auth/setup-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo})}); if(res.ok){ const d=await res.json(); document.getElementById('qrContainer').innerHTML=""; new QRCode(document.getElementById('qrContainer'), d.qrUrl); modal2FA.show(); } }
 async function confirmarActivacion2FA() { const c = document.getElementById('inputCodeConfirm').value; const res = await fetch(`${API_URL}/auth/confirm-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo, codigo:c})}); if(res.ok){ modal2FA.hide(); usuario.twoFactorEnabled=true; sessionStorage.setItem('usuario', JSON.stringify(usuario)); renderizarConfiguracion(document.getElementById('contenido-dinamico')); } }
-async function desactivar2FA() { if(confirm("¿Quitar 2FA?")) { const res = await fetch(`${API_URL}/auth/disable-2fa`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:usuario.correo})}); if(res.ok){ usuario.twoFactorEnabled=false; sessionStorage.setItem('usuario', JSON.stringify(usuario)); renderizarConfiguracion(document.getElementById('contenido-dinamico')); } } }
 function renderizarCargando(c, t) { c.innerHTML = `<div class="text-center mt-5"><div class="spinner-border text-primary"></div><p>${t}</p></div>`; }
 function mostrarError(c) { c.innerHTML = '<div class="alert alert-danger">Error.</div>'; }
 function mostrarPopup(msg) { document.getElementById('modalMensaje').innerText = msg; modalInfo.show(); }

@@ -569,14 +569,121 @@ function renderizarConfiguracion(c) {
     c.innerHTML = `<h3 class="mb-4">Configuración</h3><div class="row justify-content-center"><div class="col-md-8"><div class="card shadow border-0"><div class="card-body p-5 text-center"><i class="fa-solid fa-mobile-screen-button text-primary fa-4x mb-4"></i><h4>Seguridad 2FA</h4><div class="mt-2">${botonHtml}</div></div></div></div></div>`;
 }
 function renderizarPerfil(c) {
-    c.innerHTML = `<h3 class="mb-4">Perfil</h3><div class="card p-4 border-0 shadow-sm" style="max-width: 500px"><form id="formPerfil"><div class="mb-3"><label>Nombre</label><input id="pN" class="form-control" value="${usuario.nombreCompleto}"></div><div class="mb-3"><label>Email</label><input class="form-control bg-light" value="${usuario.correo}" disabled></div><div class="mb-3"><label>Móvil</label><input id="pM" class="form-control" value="${usuario.movil||''}"></div><button type="submit" class="btn btn-primary w-100">Guardar</button></form></div>`;
-    document.getElementById('formPerfil').addEventListener('submit', async(e)=>{ e.preventDefault(); try { const res = await authFetch(`/usuarios/${usuario.idUsuario}`, { method:'PUT', body:JSON.stringify({...usuario, nombreCompleto:document.getElementById('pN').value, movil:document.getElementById('pM').value})}); if(res && res.ok){ usuario=await res.json(); localStorage.setItem('usuario',JSON.stringify(usuario)); document.getElementById('nombreUsuarioDisplay').textContent=usuario.nombreCompleto; mostrarPopup("Actualizado."); } } catch(e){mostrarPopup("Error.");} });
+    // 1. Renderizamos el formulario
+    c.innerHTML = `
+    <h3 class="mb-4">Mi Perfil</h3>
+    <div class="card p-4 border-0 shadow-sm" style="max-width: 500px">
+        <form id="formPerfil">
+            <div class="mb-3">
+                <label class="fw-bold">Nombre Completo</label>
+                <input id="pN" class="form-control" value="${usuario.nombreCompleto}" maxlength="50" required>
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Email</label>
+                <input class="form-control bg-light" value="${usuario.correo}" disabled>
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Móvil</label>
+                <input id="pM" class="form-control" value="${usuario.movil || ''}" maxlength="9" placeholder="9 dígitos">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
+        </form>
+    </div>`;
+
+    // 2. Lógica al pulsar "Guardar"
+    document.getElementById('formPerfil').addEventListener('submit', async(e) => { 
+        e.preventDefault(); 
+        
+        const nuevoNombre = document.getElementById('pN').value;
+        const nuevoMovil = document.getElementById('pM').value;
+
+        // --- VALIDACIONES EXTRA (Por si acaso) ---
+        if (nuevoNombre.length > 50) {
+            mostrarPopup("Error: El nombre es demasiado largo."); return;
+        }
+        if (nuevoMovil && nuevoMovil.length > 9) {
+            mostrarPopup("Error: El móvil es demasiado largo."); return;
+        }
+
+        try { 
+            // Enviamos los datos al Backend
+            const res = await authFetch(`/usuarios/${usuario.idUsuario}`, { 
+                method:'PUT', 
+                body:JSON.stringify({
+                    ...usuario, 
+                    nombreCompleto: nuevoNombre, 
+                    movil: nuevoMovil
+                })
+            }); 
+            
+            if(res && res.ok){ 
+                // A) Actualizamos la variable global 'usuario' con lo que devuelve el servidor
+                usuario = await res.json(); 
+                
+                // B) Guardamos en LocalStorage para que el cambio persista si recarga la página
+                localStorage.setItem('usuario', JSON.stringify(usuario)); 
+                
+                // C) ACTUALIZACIÓN VISUAL INMEDIATA (Aquí está la magia)
+                const etiquetaNombre = document.getElementById('nombreUsuarioDisplay');
+                if (etiquetaNombre) {
+                    etiquetaNombre.textContent = usuario.nombreCompleto;
+                }
+                
+                mostrarPopup("Perfil actualizado correctamente."); 
+            } else {
+                mostrarPopup("Error al actualizar perfil.");
+            }
+        } catch(e){
+            mostrarPopup("Error de conexión.");
+        } 
+    });
 }
 
 function renderizarAyuda(c) { c.innerHTML = `<h3>Ayuda</h3><p>Contacta con soporte: 900 123 456</p>`; }
 function renderizarPrivacidad(c) { c.innerHTML = `<h3>Privacidad</h3><p>Tus datos están protegidos por LEIGSeguros S.L.</p>`; }
 
-async function crearUsuarioNuevo(e) { e.preventDefault(); const d = { nombreCompleto: document.getElementById('newUserName').value, correo: document.getElementById('newUserEmail').value, password: document.getElementById('newUserPass').value, rol: document.getElementById('newUserRol').value, activo: false }; try { const res = await authFetch(`/auth/register`, { method: 'POST', body: JSON.stringify(d) }); if(res && res.ok) { modalCrearUser.hide(); mostrarPopup("Creado."); cargarSeccion('usuarios'); } } catch(err) {} }
+async function crearUsuarioNuevo(e) { 
+    e.preventDefault(); 
+    
+    const nombre = document.getElementById('newUserName').value;
+    const movil = document.getElementById('newUserMovil').value;
+
+    // --- VALIDACIONES FRONTEND ---
+    if (nombre.length > 50) {
+        mostrarPopup("Error: El nombre no puede superar los 50 caracteres.");
+        return;
+    }
+    if (movil && movil.length > 9) { // El móvil es opcional, pero si se pone, máx 9
+        mostrarPopup("Error: El móvil no puede superar los 9 dígitos.");
+        return;
+    }
+    // -----------------------------
+
+    const d = { 
+        nombreCompleto: nombre, 
+        correo: document.getElementById('newUserEmail').value, 
+        movil: movil, // <--- AÑADIDO
+        password: document.getElementById('newUserPass').value, 
+        rol: document.getElementById('newUserRol').value, 
+        activo: false 
+    }; 
+
+    try { 
+        const res = await authFetch(`/auth/register`, { method: 'POST', body: JSON.stringify(d) }); 
+        if(res && res.ok) { 
+            modalCrearUser.hide(); 
+            // Limpiar formulario
+            document.getElementById('formCrearUsuario').reset();
+            mostrarPopup("Usuario creado correctamente. Se ha enviado un correo de activación."); 
+            cargarSeccion('usuarios'); 
+        } else {
+            const txt = await res.text();
+            mostrarPopup("Error: " + txt);
+        }
+    } catch(err) {
+        mostrarPopup("Error de conexión.");
+    } 
+}
 
 // FUNCIÓN DE IMPRESIÓN (CORREGIDA CON ID)
 function prepararFactura(id) { 

@@ -165,30 +165,48 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalCrearUsuario" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title fw-bold">Nuevo Usuario</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formCrearUsuario">
-                        <div class="mb-3"><label class="form-label fw-bold">Nombre</label><input type="text" id="newUserName" class="form-control" required></div>
-                        <div class="mb-3"><label class="form-label fw-bold">Correo</label><input type="email" id="newUserEmail" class="form-control" required></div>
-                        <div class="mb-3"><label class="form-label fw-bold">Contraseña</label><input type="password" id="newUserPass" class="form-control" required></div>
-                        <div class="mb-3"><label class="form-label fw-bold">Rol</label>
-                            <select id="newUserRol" class="form-select">
-                                <option value="USER">Cliente</option>
-                                <option value="ADMIN">Administrador</option>
-                            </select>
-                        </div>
-                        <div class="d-grid"><button type="submit" class="btn btn-success">Crear</button></div>
-                    </form>
-                </div>
+   <div class="modal fade" id="modalCrearUsuario" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold">Nuevo Usuario</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearUsuario">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre Completo</label>
+                        <input type="text" id="newUserName" class="form-control" required maxlength="50" placeholder="Máx. 50 caracteres">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Correo Electrónico</label>
+                        <input type="email" id="newUserEmail" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Móvil</label>
+                        <input type="tel" id="newUserMovil" class="form-control" maxlength="9" placeholder="9 dígitos (Ej: 600123456)">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Contraseña</label>
+                        <input type="password" id="newUserPass" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Rol</label>
+                        <select id="newUserRol" class="form-select">
+                            <option value="USER">Usuario (Cliente)</option>
+                            <option value="ADMIN">Administrador</option>
+                        </select>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">Crear Usuario</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
     <div class="modal fade" id="modal2FA" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
